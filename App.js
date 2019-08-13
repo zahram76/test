@@ -47,6 +47,7 @@ class BgTracking extends Component {
          longitude: 0
        },
        timer: null,
+       timerForReadLocation: 1000,
     };
   }
 
@@ -86,6 +87,14 @@ class BgTracking extends Component {
   }
 
   getCurrentLocation_func = () => {
+    RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
+    .then(data => {
+      this.state.timerForReadLocation = 1000;
+    }).catch(err => {
+      this.state.timerForReadLocation = 20000;
+      console.log(this.state.timerForReadLocation)
+      //alert('please enable location.'); 
+    });
     BackgroundGeolocation.getCurrentLocation(location => {
       let coordinates = {...this.state.coordinates,
         latitude: location.latitude, longitude:location.longitude};
@@ -116,11 +125,13 @@ class BgTracking extends Component {
       BackgroundGeolocation.start();
       this.BackgroundGeolocationConfig();
 
-      let timer = setInterval(this.getCurrentLocation_func, 1000);
-      this.setState({timer});
-    
+      let timer = setInterval(this.getCurrentLocation_func, this.state.timerForReadLocation);
+      this.setState({timer}); 
+
     }).catch(err => {
-      alert(err); });
+     // alert('please enable location.'); 
+    });
+    
   }
 
   componentWillUnmount() {
@@ -147,44 +158,44 @@ class BgTracking extends Component {
       stopOnTerminate: false,
     });
 
-    BackgroundGeolocation.getCurrentLocation( (location) =>{
-      let coordinates = {...this.state.coordinates,
-        latitude: location.latitude, longitude: location.longitude};
-      this.setState({coordinates});
-      console.log("current location");
-      console.log(location.latitude);
-      console.log(location.longitude);
-     // this.sendsms(location.latitude,location.longitude);
-    });
+    // BackgroundGeolocation.getCurrentLocation( (location) =>{
+    //   let coordinates = {...this.state.coordinates,
+    //     latitude: location.latitude, longitude: location.longitude};
+    //   this.setState({coordinates});
+    //   console.log("current location");
+    //   console.log(location.latitude);
+    //   console.log(location.longitude);
+    //  // this.sendsms(location.latitude,location.longitude);
+    // });
 
-    BackgroundGeolocation.on('location', (location) => {
+    // BackgroundGeolocation.on('location', (location) => {
 
-      // handle your locations here
-      // to perform long running operation on iOS
-      // you need to create background task
-       BackgroundGeolocation.startTask(taskKey => {
-        // execute long running task
-        let coordinates = {...this.state.coordinates,
-          latitude: location.latitude, longitude:location.longitude};
-        if (coordinates.latitude == this.state.coordinates.latitude
-           && coordinates.longitude == this.state.coordinates.longitude){
-          console.log("repeat");
-        }
-        else {
-          console.log("nonreapeated");
-          this.setState({coordinates});
-         // this.sendsms(location.latitude,location.longitude);
-        }
-        // this.setState({coordinates});
-        // this.sendsms(location.latitude,location.longitude);
-        console.log("Location");
-        console.log(location.latitude);
-        console.log(location.longitude);
-        // eg. ajax post location
-        // IMPORTANT: task has to be ended by endTask
-        //BackgroundGeolocation.endTask(taskKey);
-      });
-    });
+    //   // handle your locations here
+    //   // to perform long running operation on iOS
+    //   // you need to create background task
+    //    BackgroundGeolocation.startTask(taskKey => {
+    //     // execute long running task
+    //     let coordinates = {...this.state.coordinates,
+    //       latitude: location.latitude, longitude:location.longitude};
+    //     if (coordinates.latitude == this.state.coordinates.latitude
+    //        && coordinates.longitude == this.state.coordinates.longitude){
+    //       console.log("repeat");
+    //     }
+    //     else {
+    //       console.log("nonreapeated");
+    //       this.setState({coordinates});
+    //      // this.sendsms(location.latitude,location.longitude);
+    //     }
+    //     // this.setState({coordinates});
+    //     // this.sendsms(location.latitude,location.longitude);
+    //     console.log("Location");
+    //     console.log(location.latitude);
+    //     console.log(location.longitude);
+    //     // eg. ajax post location
+    //     // IMPORTANT: task has to be ended by endTask
+    //     //BackgroundGeolocation.endTask(taskKey);
+    //   });
+    //});
 
     BackgroundGeolocation.on('stationary', (stationaryLocation) => {
       // handle stationary locations here
