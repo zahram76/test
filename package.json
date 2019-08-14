@@ -8,6 +8,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "haversine": "^1.1.1",
     "lodash": "^4.17.15",
     "react": "16.8.6",
     "react-native": "^0.60.4",
@@ -15,8 +16,10 @@
     "react-native-android-sms-listener": "^0.7.0",
     "react-native-geolocation-service": "^3.0.0",
     "react-native-get-sms-android": "^1.5.0",
+    "react-native-maps": "^0.25.0",
     "react-native-mauron85-background-geolocation": "^0.5.2",
-    "react-native-sms-listener": "0.0.1"
+    "react-native-sms-listener": "0.0.1",
+    "react-native-switch-selector": "^1.1.14"
   },
   "devDependencies": {
     "@babel/core": "7.5.5",
