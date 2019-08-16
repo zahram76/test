@@ -49,7 +49,6 @@ const runKalmanOnLocations = (rawData, kalmanConstant) => {
       kalmanConstant
     );
     
-    
     console.log('last loc \n' + JSON.stringify(lastLocation))
     return JSON.stringify(lastLocation);
   });

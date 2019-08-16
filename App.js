@@ -1,5 +1,13 @@
 import React, { Component } from 'react';
-import {Alert, Dimensions, StyleSheet, View, Text, PermissionsAndroid, Platform, AppRegistry} from "react-native";
+import {
+   Alert,
+   Dimensions, 
+   StyleSheet, 
+   View, 
+   Text, 
+   PermissionsAndroid, 
+   Platform, 
+   AppRegistry } from "react-native";
 import SwitchSelector from "react-native-switch-selector";
 import BackgroundGeolocation from 'react-native-mauron85-background-geolocation';
 import SmsAndroid  from 'react-native-get-sms-android';
@@ -8,8 +16,6 @@ import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
 import runKalmanOnLocations from "./kalman";
 import MapView, {Marker, AnimatedRegion, Polyline, Circle} from "react-native-maps";
 import haversine from "haversine";
-// import _ from "lodash"; // 4.17.5
-// import { _calculateGreatCircleDistance } from "./locationHelpers";
 
 const LATITUDE =  0;
 const LONGITUDE = 0;
@@ -18,9 +24,8 @@ const ASPECT_RATIO = width / height
 const LATITUDE_DELTA = 0.007 
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO
 const options = [
-  { label: "satellite", value: "satellite" },
+  { label: "satellite", value: "hybrid" },
   { label: "standard", value: "standard" },
-  { label: "hybrid", value: "hybrid" }
 ];
 
 export async function requestPermission() {
@@ -88,11 +93,7 @@ class BgTracking extends Component {
   }
 
   toggleSwitch = (value) => {
-    //onValueChange of the switch this function will be called
     this.setState({mapType: value})
-  
-    //state changes according to switch
-    //which will result in re-render the text
  }
 
   animateMarker (){
@@ -147,43 +148,43 @@ class BgTracking extends Component {
   }
 
   beforeCallKalman(){
-    if (this.state.LocationArray.length == 20){
-        var latitudeSum = 0;
-        var longitudSum = 0; 
-        for(i=0; i<this.state.LocationArray.length; ++i){
-          latitudeSum += this.state.LocationArray[i].latitude;
-          longitudSum += this.state.LocationArray[i].longitude;
-        }
-        var latitudeAvg = latitudeSum/this.state.LocationArray.length;
-        var longitudeAvg = longitudSum/this.state.LocationArray.length;
-        var las = 0;
-        var los = 0;
-        console.log(latitudeAvg + ' llllaaaaaattttiiiiiidddddeee avg')
-        for(i=0; i<this.state.LocationArray.length; ++i){
-          las += Math.pow((this.state.LocationArray[i].latitude-latitudeAvg),2);
-          los += Math.pow((this.state.LocationArray[i].longitude-longitudeAvg),2);
-        }
-        var latitudeVariance = (las/this.state.LocationArray.length);
-        var longitudeVariance = (los/this.state.LocationArray.length);
-        console.log(latitudeVariance + ' llllaaaaaattttiiiiiidddddeee variance')
-        var latitudeX = (latitudeAvg - 2*latitudeVariance);
-        var longitudX = (longitudeAvg - 2*longitudeVariance);
-        console.log(latitudeX + ' lllaaaaatiiiiiiiiiitttttuuuuudeeeeee X')
-        console.log(longitudX + ' lllaaaaatiiiiiiiiiitttttuuuuudeeeeee X')
-        for(i=0; i<this.state.LocationArray.length; ++i){
-          if( this.state.LocationArray[i].latitude < latitudeX || 
-            this.state.LocationArray[i].longitude < longitudX){
-                var array = [...this.state.LocationArray]; // make a separate copy of the array
-                var index = i
-                if (index !== -1) {
-                  array.splice(index, 1);
-                  this.setState({LocationArray: array});
-                  //console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n' + JSON.stringify(array));
-            }
-          }
-        }
+    if (this.state.LocationArray.length == 2){
+        // var latitudeSum = 0;
+        // var longitudSum = 0; 
+        // for(i=0; i<this.state.LocationArray.length; ++i){
+        //   latitudeSum += this.state.LocationArray[i].latitude;
+        //   longitudSum += this.state.LocationArray[i].longitude;
+        // }
+        // var latitudeAvg = latitudeSum/this.state.LocationArray.length;
+        // var longitudeAvg = longitudSum/this.state.LocationArray.length;
+        // var las = 0;
+        // var los = 0;
+        // console.log(latitudeAvg + ' llllaaaaaattttiiiiiidddddeee avg')
+        // for(i=0; i<this.state.LocationArray.length; ++i){
+        //   las += Math.pow((this.state.LocationArray[i].latitude-latitudeAvg),2);
+        //   los += Math.pow((this.state.LocationArray[i].longitude-longitudeAvg),2);
+        // }
+        // var latitudeVariance = (las/this.state.LocationArray.length);
+        // var longitudeVariance = (los/this.state.LocationArray.length);
+        // console.log(latitudeVariance + ' llllaaaaaattttiiiiiidddddeee variance')
+        // var latitudeX = (latitudeAvg - 2*latitudeVariance);
+        // var longitudX = (longitudeAvg - 2*longitudeVariance);
+        // console.log(latitudeX + ' lllaaaaatiiiiiiiiiitttttuuuuudeeeeee X')
+        // console.log(longitudX + ' lllaaaaatiiiiiiiiiitttttuuuuudeeeeee X')
+        // for(i=0; i<this.state.LocationArray.length; ++i){
+        //   if( this.state.LocationArray[i].latitude < latitudeX || 
+        //     this.state.LocationArray[i].longitude < longitudX){
+        //         var array = [...this.state.LocationArray]; // make a separate copy of the array
+        //         var index = i
+        //         if (index !== -1) {
+        //           array.splice(index, 1);
+        //           this.setState({LocationArray: array});
+        //           //console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n' + JSON.stringify(array));
+        //     }
+        //   }
+        // }
       
-      if(this.state.LocationArray.length > 0){
+      //if(this.state.LocationArray.length > 0){
         const kalmanSolution = JSON.stringify(runKalmanOnLocations(this.state.LocationArray, this.state.kalmanConstant));
         this.setState({kalmanSolution}) 
         console.log(kalmanSolution + ' lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll\n' +
@@ -193,7 +194,7 @@ class BgTracking extends Component {
         array.splice(index,1)
         this.setState({LocationArray : array});
         
-      }
+      //}
     }
   }
 
@@ -220,8 +221,8 @@ class BgTracking extends Component {
           this.animateMarker();
       }
       console.log('puuuuuuuuushhhhhhhhhhhhhhhhhhh')
-          this.state.LocationArray.push(location);
-          this.beforeCallKalman();  
+         // this.state.LocationArray.push(location);
+         // this.beforeCallKalman();  
      });
   }
 
@@ -229,14 +230,14 @@ class BgTracking extends Component {
     await requestPermission();
     RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
     .then(data => {
-      //this.geolocationWatcher();
+      this.geolocationWatcher();
       BackgroundGeolocation.start();
       this.BackgroundGeolocationConfig();
 
       console.log(data + ' data');
       if(data == 'enabled' || data == 'already-enabled'){
-        let timer = setInterval(this.getCurrentLocation_func, this.state.timerForReadLocation);
-        this.setState({timer}); 
+        // let timer = setInterval(this.getCurrentLocation_func, this.state.timerForReadLocation);
+        // this.setState({timer}); 
       }
     }).catch(err => {
     });
@@ -266,43 +267,43 @@ class BgTracking extends Component {
       stopOnTerminate: false,
     });
 
-    // BackgroundGeolocation.getCurrentLocation( (location) =>{
-    //   let coordinates = {...this.state.coordinates,
-    //     latitude: location.latitude, longitude: location.longitude};
-    //   this.setState({coordinates});
+    BackgroundGeolocation.getCurrentLocation( (location) =>{
+      let coordinates = {...this.state.coordinates,
+        latitude: location.latitude, longitude: location.longitude};
+      this.setState({coordinates});
 
-    //   console.log("Current Location\n" + location.latitude + '\n' + location.longitude);
+      console.log("Current Location\n" + location.latitude + '\n' + location.longitude);
 
-    //   let coords = {latitude: location.latitude, longitude: location.longitude};
-    //   this.setState({coords});
-    //   console.log(this.state.coords)
-    //   this.animateMarker();
-    //   this.state.LocationArray.push(location);
-    //   //this.sendsms(location.latitude,location.longitude);
-    // });
+      let coords = {latitude: location.latitude, longitude: location.longitude};
+      this.setState({coords});
+      console.log(this.state.coords)
+      this.animateMarker();
+      this.state.LocationArray.push(location);
+      //this.sendsms(location.latitude,location.longitude);
+    });
 
-    // BackgroundGeolocation.on('location', (location) => {
-    //    //BackgroundGeolocation.startTask(taskKey => {
-    //     let coordinates = {latitude: location.latitude, longitude:location.longitude};
-    //     if (coordinates.latitude == this.state.coordinates.latitude
-    //        && coordinates.longitude == this.state.coordinates.longitude){
-    //       console.log("repeat");
-    //     }
-    //     else {
-    //       this.setState({coordinates});
-    //       console.log("non-repeated Location\n" + location.latitude + '\n' + location.longitude);
-    //       let coords = {latitude: location.latitude, longitude: location.longitude};
-    //       this.setState({coords});
-    //       console.log(this.state.coords)
-    //       this.animateMarker();
-    //       //this.sendsms(location.latitude,location.longitude);
-    //     }
-    //     console.log('puuuuuuuuushhhhhhhhhhhhhhhhhhh')
-    //       this.state.LocationArray.push(location);
-    //       this.beforeCallKalman();
-    //     //BackgroundGeolocation.endTask(taskKey);
-    //   // });
-    // });
+    BackgroundGeolocation.on('location', (location) => {
+       //BackgroundGeolocation.startTask(taskKey => {
+        let coordinates = {latitude: location.latitude, longitude:location.longitude};
+        if (coordinates.latitude == this.state.coordinates.latitude
+           && coordinates.longitude == this.state.coordinates.longitude){
+          console.log("repeat");
+        }
+        else {
+          this.setState({coordinates});
+          console.log("non-repeated Location\n" + location.latitude + '\n' + location.longitude);
+          let coords = {latitude: location.latitude, longitude: location.longitude};
+          this.setState({coords});
+          console.log(this.state.coords)
+          this.animateMarker();
+          //this.sendsms(location.latitude,location.longitude);
+        }
+        console.log('puuuuuuuuushhhhhhhhhhhhhhhhhhh')
+          // this.state.LocationArray.push(locat ion);
+          // this.beforeCallKalman();
+        //BackgroundGeolocation.endTask(taskKey);
+      // });
+    });
 
     BackgroundGeolocation.on('stationary', (stationaryLocation) => {
       // handle stationary locations here
@@ -344,26 +345,26 @@ class BgTracking extends Component {
     }); 
    }   
 
-//    geolocationWatcher(){
-//     this.watchID = Geolocation.watchPosition(
-//       position => {
-//         var lat = parseFloat(position.coords.latitude);
-//         var long = parseFloat(position.coords.longitude);
-//         ///let marker = {...this.state.markers, coordinates:{latitude:lat,longitude:long}};
-//         //this.setState({markers: marker});
-//         console.log('wacher \n');
-//         let coords = {latitude: lat, longitude: long};
-//         this.setState({coords});
-//         console.log(this.state.coords)
-//          this.animateMarker();
-//         // this.state.LocationArray.push(location);
-//         // this.beforeCallKalman(); 
-//         //this.sendsms(lat,long);
-//       },
-//       error => alert(error),
-//       {enableHighAccuracy: true, timeout: 200, maximumAge: 1000, distanceFilter: 0.1}
-//     );
-//  }
+   geolocationWatcher(){
+    this.watchID = Geolocation.watchPosition(
+      position => {
+        var lat = parseFloat(position.coords.latitude);
+        var long = parseFloat(position.coords.longitude);
+        ///let marker = {...this.state.markers, coordinates:{latitude:lat,longitude:long}};
+        //this.setState({markers: marker});
+        console.log('wacher \n');
+        let coords = {latitude: lat, longitude: long};
+        this.setState({coords});
+        console.log(this.state.coords)
+         this.animateMarker();
+        // this.state.LocationArray.push(location);
+        // this.beforeCallKalman(); 
+        //this.sendsms(lat,long);
+      },
+      error => alert(error),
+      {enableHighAccuracy: true, timeout: 200, maximumAge: 1000, distanceFilter: 0.1}
+    );
+ }
 
   render() {
     return (
@@ -379,7 +380,6 @@ class BgTracking extends Component {
               region={this.getMapRegion()}
             >
                 <Polyline coordinates={this.state.routeCoordinates} strokeWidth={5} strokeColor= {"red"}/>
-
                 <Marker.Animated
                     ref={marker => {
                     this.marker = marker;
@@ -388,28 +388,27 @@ class BgTracking extends Component {
                 >
                 </Marker.Animated>
             </MapView>
-            <View>
             <SwitchSelector
+              style={{marginTop : 20,
+                marginHorizontal : 100}}
               options={options}
               initial={0}
               onPress={value => this.toggleSwitch(value)}
             />
-              <Text> latitude : {this.state.coords.latitude} </Text> 
-              <Text> longitude : {this.state.coords.longitude} </Text>
-              <Text> latitudeDelta : {this.state.latitudeDelta}</Text>
-              <Text> lonitudeDelta : {this.state.longitudeDelta}</Text> 
-            </View> 
           </View>        
     );
   }
-
 }
 
+/* <Text> latitude : {this.state.coords.latitude} </Text> 
+<Text> longitude : {this.state.coords.longitude} </Text>
+<Text> latitudeDelta : {this.state.latitudeDelta}</Text>
+<Text> lonitudeDelta : {this.state.longitudeDelta}</Text>  */
 
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: "flex-end",
+    justifyContent: "flex-start",
     alignItems: "center"
   },
   map: {
