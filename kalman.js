@@ -1,7 +1,5 @@
 import _ from "lodash"; // 4.17.5
 import { _calculateGreatCircleDistance } from "./locationHelpers";
-import React, { Component } from 'react';
-import {Alert, AppState, StyleSheet, View, Text, PermissionsAndroid, Platform, AppRegistry} from "react-native";
 
 const kalman = (location, lastLocation, constant) => {
   const accuracy = Math.max(location.accuracy, 1);
@@ -50,7 +48,8 @@ const runKalmanOnLocations = (rawData, kalmanConstant) => {
     );
     
     console.log('last loc \n' + JSON.stringify(lastLocation))
-    return JSON.stringify(lastLocation);
+    return 
+      JSON.stringify(lastLocation);
   });
 }
 
