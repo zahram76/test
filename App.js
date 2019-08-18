@@ -87,7 +87,6 @@ export async function requestPermission() {
 class BgTracking extends Component {
   constructor(){
     super();
-    //this.markers=[];
 
     this.state = {
       counter: 0,
@@ -112,6 +111,7 @@ class BgTracking extends Component {
         }),
         color: '', 
         title: '',
+        image: '',
       }],
 
       region:{
@@ -125,6 +125,8 @@ class BgTracking extends Component {
          latitude : LATITUDE,
          longitude : LONGITUDE
        }],
+
+       speed: [0,0,0,0],
     };
   }
 
@@ -151,15 +153,14 @@ class BgTracking extends Component {
               {this.state.Markers.map(marker => {
                 return (
                   <Marker
-                    coordinate={{
+                      coordinate={{
                       latitude: marker.latitude,
                       longitude: marker.longitude}}
-                    pinColor={marker.color}
-                    title={marker.title}
+                      pinColor={marker.color}
+                      title={marker.title}
                   >
                   </Marker> );
                 })}
-
             </MapView>
             <View style={{width: width-100}}>
               <SwitchSelector
@@ -170,23 +171,9 @@ class BgTracking extends Component {
                 onPress={value => this.setState({mapType: value})}
               />
             
-              <Text> delta : {this.state.region.latitudeDelta} </Text>
-              <Slider
-                step={0.0001}
-                maximumValue={0.9}
-                style={{marginVertical : 20}}
-                onValueChange={delta => {
-                  console.log('delta: ' + delta)
-                  this.setState({
-                    region: {
-                      ...this.state.region,
-                      latitudeDelte: parseFloat(delta),
-                      longitudeDelta: parseFloat(delta)*ASPECT_RATIO
-                    }
-                  });
-                }}
-                value={this.state.region.latitudeDelta}
-              />
+                <Text> AVG Speed : {this.state.speed[1]} </Text>
+                <Text> Median Speed : {this.state.speed[0]} </Text>
+                <Text> Real Speed : {this.state.speed[3]} </Text>
               </View>
           </View>
     );
@@ -218,28 +205,49 @@ class BgTracking extends Component {
   }
 
   getMedianLocation(){
-    index = 0
-    latMedian = 0
-    longMedian = 0
-    let latArray = []
-    let longArray = []
-    len = this.state.LocationArray.length
+    index = 0;
+    latMedian = 0;
+    longMedian = 0;
+    xMedian = 0;
+    yMedian = 0;
+    let latArray = [];
+    let longArray = [];
+    len = this.state.LocationArray.length;
     for(i=0; i< len; ++i){
       latArray.push(this.state.LocationArray[i].latitude);
-      longArray.push(this.state.LocationArray[i].longitud);
+      longArray.push(this.state.LocationArray[i].longitude);
     }
     let LatSortedArray = insertionSort(latArray) 
     let LongSortedArray = insertionSort(longArray)
 
     if(len %2 == 0){
-      latMedian = LatSortedArray[len/2]
-      longMedian = LongSortedArray[len/2]
+      xMedian = LatSortedArray[len/2]
+      yMedian = LongSortedArray[len/2]
     } else {
-      latMedian = (LatSortedArray[(len/2)-1]+LatSortedArray[(len/2)+1])*1.0/2
-      longMedian = (LongSortedArray[(len/2)-1]+LongSortedArray[(len/2)+1])*1.0/2
+      xMedian = (LatSortedArray[(len/2)-1]+LatSortedArray[(len/2)+1])*1.0/2
+      yMedian = (LongSortedArray[(len/2)-1]+LongSortedArray[(len/2)+1])*1.0/2
     }
+
+    var min = Math.abs(latArray[0] - xMedian) + Math.abs(longArray[0] - yMedian);
+    var arrayIndex = 0;
+    var temp = 0;
+    for(j=0; j< len; ++j){
+      temp = Math.abs(latArray[j] - xMedian) + Math.abs(longArray[j] - yMedian);
+      if( temp < min) {
+        min = temp;
+        arrayIndex = j;
+      }
+      console.log(j + ' array index')
+    }
+
+    latMedian = latArray[arrayIndex];
+    longMedian = longArray[arrayIndex];
+
+    let b = this.state.speed;
+    b[index] = this.state.LocationArray[arrayIndex].speed;
+    this.setState({speed: b})
+
     console.log('\n index median: '+ index)
-    console.log('lat median '+ latMedian +'\n long median ' + longMedian)
     let coords = {latitude: latMedian, longitude: longMedian};
     let a = this.state.coordinates;
     a[index] = coords;
@@ -251,13 +259,20 @@ class BgTracking extends Component {
     var index = 1;
     var latitudeSum = 0;
     var longitudSum = 0;
-
-    for(i=0; i<this.state.LocationArray.length; ++i){
+    var speedSum = 0;
+    var len = this.state.LocationArray.length;
+    for(i=0; i<len; ++i){
         latitudeSum += this.state.LocationArray[i].latitude;
         longitudSum += this.state.LocationArray[i].longitude;
+        speedSum += this.state.LocationArray[i].speed;
     }
-    var latitudeAvg = latitudeSum/this.state.LocationArray.length;
-    var longitudeAvg = longitudSum/this.state.LocationArray.length;
+    var latitudeAvg = latitudeSum/len;
+    var longitudeAvg = longitudSum/len;
+    var speedAVG = speedSum/len;
+
+    let b = this.state.speed;
+    b[index] = speedAVG;
+    this.setState({speed: b})
 
     let coords = {latitude: latitudeAvg, longitude: longitudeAvg};
     let a = this.state.coordinates;
@@ -277,6 +292,10 @@ class BgTracking extends Component {
     let coords = {latitude: parseFloat(JSON.stringify( this.state.kalmanSolution.latitude)),
           longitude: parseFloat(JSON.stringify( this.state.kalmanSolution.longitude))};
 
+    let b = this.state.speed;
+    b[index] = parseFloat(JSON.stringify( this.state.kalmanSolution.speed));
+    this.setState({speed: b})
+
     let a = this.state.coordinates;
     a[index] = coords;
     this.setState({coordinates : a});
@@ -287,9 +306,11 @@ class BgTracking extends Component {
   showRealData(coordinate){
     index = 3;
     let a = this.state.coordinates;
+    //console.log('nemidoonam '+JSON.stringify(a[index]))
     a[index] = coordinate;
+    //console.log('ey baba '+JSON.stringify(a[index]))
     this.setState({coordinates : a});
-    console.log(this.state.coordinates[index])
+    //console.log(this.state.coordinates[index])
     console.log('\n index real: '+ index)
     this.animateMarker(index);
   }
@@ -297,7 +318,8 @@ class BgTracking extends Component {
   beforShowLocation(){
     if (this.state.LocationArray.length == 10){
       this.getAVGlocation();
-      //this.getMedianLocation();
+      this.getMedianLocation();
+      //this.getKalmanFilteredLocation();
 
      // this.state.counter += 1;
       // if(this.state.counter == 60){
@@ -311,6 +333,7 @@ class BgTracking extends Component {
       this.setState({LocationArray: filteredItems});
     }
   }
+
   getCurrentLocation_func = () => {
     RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
     .then(data => {
@@ -319,21 +342,25 @@ class BgTracking extends Component {
       this.state.timerForReadLocation = 10000;
     });
     BackgroundGeolocation.getCurrentLocation(location => {
-      let coordinates = {...this.state.coordinates,
-        latitude: location.latitude, longitude:location.longitude};
+      let coordinates = {latitude: location.latitude, longitude:location.longitude};
       if (coordinates.latitude == this.state.coordinates.latitude
          && coordinates.longitude == this.state.coordinates.longitude){
         console.log("repeat");
       }
       else {
         console.log("non-repeated Location by timer\n" + location.latitude + '\n' + location.longitude);
-          this.setState({coordinates});
+          //this.setState({coordinates});
           
       }
       //this.showRealData(coordinates);
+      
+      var index = 3; 
+      let b = this.state.speed;
+      b[index] = location.speed;
+      this.setState({speed: b})
       console.log('puuuuuuuuushhhhhhhhhhhhhhhhhhh')
-         this.state.LocationArray.push(location);
-         this.beforShowLocation();
+      this.state.LocationArray.push(location);
+      this.beforShowLocation();
      });
   }
 
@@ -372,7 +399,9 @@ class BgTracking extends Component {
     longitude: location.longitude
   }
   let a = [];
-  let b = ['red', 'green', 'purple','orange'];
+  let d = [require('./asset/marker3.png'), require('./asset/marker2.png'),
+  require('./asset/marker4.png'),require('./asset/marker1.png')];
+  let b = ['red', 'green', 'purple','yellow'];
   let c = ['Median', 'AVG', 'Kalman','realData'];
   for( x=0; x< 4; ++x){
     a.push({
@@ -389,6 +418,7 @@ class BgTracking extends Component {
       }),
       color: b[x],
       title: c[x],
+      image: d[x]
     })
   }
   this.setState({Markers : a});
