@@ -1,93 +1,37 @@
 import React, { Component } from 'react';
-import {
-   Alert,
-   Dimensions,
-   StyleSheet,
-   View,
-   Text,
-   PermissionsAndroid,
-   Platform,
-   Slider,
-   Image,
-   AppRegistry } from "react-native";
+import {Dimensions, View, Text, AppRegistry, TouchableOpacity} from "react-native";
 import SwitchSelector from "react-native-switch-selector";
 import BackgroundGeolocation from 'react-native-mauron85-background-geolocation';
 import SmsAndroid  from 'react-native-get-sms-android';
-import Geolocation from 'react-native-geolocation-service';
 import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
-//import runKalmanOnLocations from "./kalman";
-import MapView, {Marker, AnimatedRegion, Polyline, Circle} from "react-native-maps";
+import MapView, {Marker, AnimatedRegion, Polyline} from "react-native-maps";
 import haversine from "haversine";
-import _ from "lodash"; // 4.17.5
-import { _calculateGreatCircleDistance } from "./locationHelpers";
+//import _ from "lodash"; // 4.17.5
+//import { _calculateGreatCircleDistance } from "./locationHelpers";
+import {styles} from './style.js';
+import {requestPermission} from './permission.js';
+import {insertionSort} from './insertionSort.js';
+import { initDatabase } from './initDatabase.js';
+import { insertLocation } from './insertLocations.js';
+import { deleteLacation } from './deleteLocation';
+import Geohash from 'latlon-geohash';
+ 
 
 const LATITUDE =  0;
 const LONGITUDE = 0;
-let { width, height } = Dimensions.get('window')
-const ASPECT_RATIO = width / height
-const LATITUDE_DELTA = 0.01
-const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO
+let { width, height } = Dimensions.get('window');
+const ASPECT_RATIO = width / height;
+const LATITUDE_DELTA = 0.01;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 const options = [
   { label: "satellite", value: "hybrid" },
   { label: "standard", value: "standard" },
 ];
 
-function insertionSort(list) {
-  const len = list.length
-  for (let i = 1; i < len; i++){
-    if (list[i] < list[0]){
-      // move current element to the first position
-      list.unshift(list.splice(i,1)[0])
-    } 
-    else if (list[i] > list[i-1]){
-      // maintain element position
-      continue
-    } 
-    else {
-      // find where element should go
-      for (let j = 1; j < i; j++) {
-        if (list[i] > list[j-1] && list[i] < list[j]) 
-        {
-          // move element
-          list.splice(j, 0, list.splice(i,1)[0])
-        }
-      }
-    }
-  }
-  return list
-}
 
-export async function requestPermission() {
-  try {
-    const granted = await PermissionsAndroid.requestMultiple(
-      [PermissionsAndroid.PERMISSIONS.SEND_SMS,
-      PermissionsAndroid.PERMISSIONS.READ_SMS,
-      PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] ,
-      PermissionsAndroid.PERMISSIONS.NOTIFICATIONS,
-      {
-        title: 'App',
-        message:
-          'App needs access to your SMS and read your loacation',
-        buttonNeutral: 'Ask Me Later',
-        buttonNegative: 'Cancel',
-        buttonPositive: 'OK',
-      },
-    );
-    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      console.log('granted');
-    } else {
-      console.log('not granted');
-    }
-  } catch (err) {
-    console.warn(err);
-  }
-};
-
-class BgTracking extends Component {
+export default class BgTracking extends Component {
   constructor(){
     super();
-
     this.state = {
       counter: 0,
       message: '',
@@ -96,104 +40,92 @@ class BgTracking extends Component {
       timerForReadLocation: 1000,
       kalmanConstant: 500,
       kalmanSolution: null,
-
-      Markers:[{
-        latitude: 0,
-        longitude: 0,
-        routeCoordinates: [],
-        distanceTravelled: 0,
-        prevLatLng: {},
-        coordinate: new AnimatedRegion({
-          latitude: 0,
-          longitude: 0,
-          latitudeDelta: 0.009,
-          longitudeDelta: 0.009
-        }),
-        color: '', 
-        title: '',
-        image: '',
-      }],
-
+      Markers:[],
       region:{
         latitude: 0,
         longitude: 0,
         latitudeDelta: LATITUDE_DELTA,
         longitudeDelta: LONGITUDE_DELTA
       },
-
       coordinates: [{
          latitude : LATITUDE,
          longitude : LONGITUDE
        }],
-
-       speed: [0,0,0,0],
+       speed: [0,0,0,0], 
+       geohash : '',
+       count : 0,
+       correct : 0,
     };
+    
+    
+    initDatabase();
   }
 
   render(){
     return (
-        <View style={styles.container}>
+        <View style={{flex: 1}}>
             <MapView
-              style={styles.map}
+              ref={ref => {this.map = ref;}}
+              style={{flex:1, height: '100%', width: '100%'}}
               mapType={this.state.mapType}
-              loadingEnabled
+              loadingEnabled={true}
               showsUserLocation
-              followsUserLocation
-              showsMyLocationButton
-              region={this.state.region} 
-              onRegionChangeComplete ={ (region) => this.setState({ region})}
+              showsIndoorLevelPicker={true}
+              initialRegion={this.state.region}
+              region={ this.state.region }
+              onRegionChangeComplete={ region => this.setState({region}) }
             >
               {this.state.Markers.map(poly => {
                 return (
-                  <Polyline coordinates={poly.routeCoordinates} 
-                    strokeWidth={5} strokeColor= {String(poly.color)} lineCap= {"square"} lineJoin= {"miter"}>
+                  <Polyline 
+                    key={`poly_${poly.id}`}
+                    coordinates={poly.routeCoordinates}
+                    strokeWidth={5} strokeColor= {poly.color}>
                   </Polyline> );
                })}
-
               {this.state.Markers.map(marker => {
                 return (
                   <Marker
+                      key={`marker_${marker.id}`}
                       coordinate={{
                       latitude: marker.latitude,
                       longitude: marker.longitude}}
                       pinColor={marker.color}
-                      title={marker.title}
-                  >
+                      title={marker.title}>
                   </Marker> );
                 })}
             </MapView>
-            <View style={{width: width-100}}>
+            <View style={styles.MapTypeMenuStyle}>
               <SwitchSelector
-                style={{marginVertical : 20,
-                  marginHorizontal : 20}}
                 options={options}
                 initial={1}
                 onPress={value => this.setState({mapType: value})}
               />
-            
+              <View style={{backgroundColor: 'rgba(255,255,254,0.8)',
+                  borderRadius: 20,padding: 10,
+                  color: '#000000', alignSelf: 'center', marginTop: 20}}>
                 <Text> AVG Speed : {this.state.speed[1]} </Text>
                 <Text> Median Speed : {this.state.speed[0]} </Text>
                 <Text> Real Speed : {this.state.speed[3]} </Text>
               </View>
+              <TouchableOpacity  
+                  style={{backgroundColor: 'rgba(255,255,254,0.9)', marginTop: 20, 
+                  borderRadius: 20,padding: 10,
+                  color: '#000000', alignSelf: 'center'}}
+                  onPress={() => deleteLacation()}>
+                  <Text>Delete</Text>
+              </TouchableOpacity>
+              
+              </View>
           </View>
     );
   }
-  
+
   animateMarker (index){
     const routeCoordinates = this.state.Markers[index].routeCoordinates;
     const distanceTravelled = this.state.Markers[index].distanceTravelled;
     const { latitude, longitude } = this.state.coordinates[index];
-    const newCoordinate = {
-      latitude,
-      longitude
-    };
-
-    // if (this.marker) {
-    // this.markers[0]._component.animateMarkerToCoordinate(
-    //    newCoordinate, 100);
-    // }
-    //this.state.Markers[index].coordinate.timing(newCoordinate).start();
-
+    const newCoordinate = { latitude, longitude };
     let a = this.state.Markers; //creates the clone of the state
     a[index] = {latitude,
                 longitude,
@@ -202,6 +134,145 @@ class BgTracking extends Component {
                   distanceTravelled + this.calcDistance(newCoordinate, index),
                 prevLatLng: newCoordinate};
     this.setState({Markers: a});
+  }
+
+  showRealData(coordinate){
+    index = 3;
+    let a = this.state.coordinates;
+    a[index] = coordinate;
+    this.setState({coordinates : a});
+    console.log('\n index real: '+ index)
+    this.animateMarker(index);
+  }
+
+  beforShowLocation(){
+    if (this.state.LocationArray.length == 10){
+      //this.getAVGlocation();
+      //this.getMedianLocation();
+      //this.getKalmanFilteredLocation();
+      console.log('length '+this.state.LocationArray.length)
+      var array = [...this.state.LocationArray]; // make a separate copy of the array
+      filteredItems = array.slice(1, 10) // remove first element of locationArray
+      this.setState({LocationArray: filteredItems});
+    }
+  }
+
+  getCurrentLocation_func = () => {
+    RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
+    .then(data => {
+      this.state.timerForReadLocation = 1000;
+    }).catch(err => {
+      this.state.timerForReadLocation = 10000;
+    });
+    BackgroundGeolocation.getCurrentLocation(location => {
+      let coordinates = {latitude: location.latitude, longitude:location.longitude};
+      if (coordinates.latitude == this.state.coordinates[3].latitude
+         && coordinates.longitude == this.state.coordinates[3].longitude){
+        console.log("repeat");
+      }
+      else {console.log("non-repeated Location by timer\n" + location.latitude + '\n' + location.longitude);}
+      var index = 3;
+      let b = this.state.speed;
+      b[index] = location.speed;
+      this.setState({speed: b});
+
+      if(this.state.count == 0){
+        this.setState({geohash : Geohash.encode(location.latitude, location.longitude, 9)});
+        this.loc = location;
+        console.log('first encoded geohash : ' + this.state.geohash)
+        this.setState({count: this.state.count+1})
+      }
+      else if(this.state.count < 5){
+        var g1 = Geohash.encode(location.latitude, location.longitude, 9);
+        console.log( this.state.count + ' encoded geohash : ' + g1)
+        if(this.state.geohash == g1) this.setState({correct : this.state.correct+1});
+        console.log('correct : ' + this.state.correct)
+        this.setState({count: this.state.count+1})
+      }
+      else {
+        this.setState({correct : 0})
+        this.setState({count : 0})
+      }
+
+      if(this.state.correct > 3){
+        var latlong = Geohash.decode(this.state.geohash);
+        console.log( this.state.count + ' decoded geohash latlong  : ' + JSON.stringify(latlong))
+        //this.state.LocationArray.push(location);
+        console.log('location : ' +  JSON.stringify(this.loc))
+        var lat,long;
+        JSON.parse(JSON.stringify(latlong), (key,value) => {
+          if(key == "lat") lat = value
+          if(key == "lon") long = value
+        })
+        let coords = {latitude: lat, longitude: long};
+        this.showRealData(coords);
+        //this.showRealData(coordinates);
+      }      
+
+      //this.showRealData(coordinates);
+      //console.log('push')
+      //this.state.LocationArray.push(location);
+      //insertLocation('real', location.latitude, location.longitude);
+      //this.beforShowLocation();
+     });
+  }
+
+   componentDidMount() {
+     requestPermission();
+    RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
+    .then(data => {
+      this.BackgroundGeolocationConfig();
+      BackgroundGeolocation.start();
+      console.log('hello');
+
+      BackgroundGeolocation.getCurrentLocation(location => {
+        console.log('hello too');
+        this.init(location);
+      });
+      let timer = setInterval(this.getCurrentLocation_func, this.state.timerForReadLocation);
+      this.setState({timer});
+
+    }).catch(err => {
+    });
+  }
+
+  init(location){
+    this.setState({region : {
+      latitude : location.latitude,
+      longitude : location.longitude,
+      latitudeDelta : 0.01,
+      longitudeDelta : 0.01,
+    }});
+
+  console.log('region: '+JSON.stringify(this.state.region));
+  coordinate = {
+    latitude: location.latitude,
+    longitude: location.longitude
+  }
+  let b = ['red', 'green', 'purple','yellow'];
+  let c = ['Median', 'AVG', 'Kalman','realData'];
+  for( x=0; x< 4; ++x){
+    this.state.Markers.push({
+      latitude: coordinate.latitude,
+      longitude: coordinate.longitude,
+      routeCoordinates: [],
+      distanceTravelled: 0,
+      prevLatLng: {},
+      coordinate: new AnimatedRegion({
+        latitude: coordinate.latitude,
+        longitude: coordinate.longitude,
+        latitudeDelta : 0.01,
+        longitudeDelta : 0.01,
+      }),
+      color: b[x].toString(),
+      title: c[x],
+      id : x
+      });
+      this.state.coordinates.push({
+        latitude: location.latitude,
+        longitude: location.longitude
+      })
+    }
   }
 
   getMedianLocation(){
@@ -217,9 +288,8 @@ class BgTracking extends Component {
       latArray.push(this.state.LocationArray[i].latitude);
       longArray.push(this.state.LocationArray[i].longitude);
     }
-    let LatSortedArray = insertionSort(latArray) 
+    let LatSortedArray = insertionSort(latArray)
     let LongSortedArray = insertionSort(longArray)
-
     if(len %2 == 0){
       xMedian = LatSortedArray[len/2]
       yMedian = LongSortedArray[len/2]
@@ -227,31 +297,38 @@ class BgTracking extends Component {
       xMedian = (LatSortedArray[(len/2)-1]+LatSortedArray[(len/2)+1])*1.0/2
       yMedian = (LongSortedArray[(len/2)-1]+LongSortedArray[(len/2)+1])*1.0/2
     }
-
-    var min = Math.abs(latArray[0] - xMedian) + Math.abs(longArray[0] - yMedian);
+    // var min = Math.abs(latArray[0] - xMedian) + Math.abs(longArray[0] - yMedian);
+    // var arrayIndex = 0;
+    // var temp = 0;
+    // for(j=0; j< len; ++j){
+    //   temp = Math.abs(latArray[j] - xMedian) + Math.abs(longArray[j] - yMedian);
+    //   if( temp < min) {
+    //     min = temp;
+    //     arrayIndex = j;
+    //   }
+     // //console.log(j + ' array index')
+    //}
+    var min = Math.sqrt( Math.pow((latArray[0],2 - xMedian),2) + Math.pow((longArray[0] - yMedian),2));
     var arrayIndex = 0;
     var temp = 0;
     for(j=0; j< len; ++j){
-      temp = Math.abs(latArray[j] - xMedian) + Math.abs(longArray[j] - yMedian);
+      temp = Math.sqrt( Math.pow((latArray[j],2 - xMedian),2) + Math.pow((longArray[j] - yMedian),2));
       if( temp < min) {
         min = temp;
         arrayIndex = j;
       }
-      console.log(j + ' array index')
     }
-
     latMedian = latArray[arrayIndex];
     longMedian = longArray[arrayIndex];
-
     let b = this.state.speed;
     b[index] = this.state.LocationArray[arrayIndex].speed;
     this.setState({speed: b})
-
     console.log('\n index median: '+ index)
     let coords = {latitude: latMedian, longitude: longMedian};
     let a = this.state.coordinates;
     a[index] = coords;
     this.setState({coordinates : a});
+    insertLocation('median', latMedian, longMedian);
     this.animateMarker(index);
   }
 
@@ -269,165 +346,19 @@ class BgTracking extends Component {
     var latitudeAvg = latitudeSum/len;
     var longitudeAvg = longitudSum/len;
     var speedAVG = speedSum/len;
-
     let b = this.state.speed;
     b[index] = speedAVG;
     this.setState({speed: b})
-
     let coords = {latitude: latitudeAvg, longitude: longitudeAvg};
     let a = this.state.coordinates;
     a[index] = coords;
     this.setState({coordinates : a});
     console.log('\n index avg: '+ index)
+    insertLocation('average', latitudeAvg, longitudeAvg);
     this.animateMarker(index);
-  }
-
-  //const uniquename = Array.from(new Set(names)); // return uniqe element from names array :))
-  //dataset.reduce((n, x) => n + (x === search), 0) //search in dataset array for searech and return count of it
-
-  getKalmanFilteredLocation(){
-    var index = 2;
-    this.runKalmanOnLocations(this.state.LocationArray, this.state.kalmanConstant);
-
-    let coords = {latitude: parseFloat(JSON.stringify( this.state.kalmanSolution.latitude)),
-          longitude: parseFloat(JSON.stringify( this.state.kalmanSolution.longitude))};
-
-    let b = this.state.speed;
-    b[index] = parseFloat(JSON.stringify( this.state.kalmanSolution.speed));
-    this.setState({speed: b})
-
-    let a = this.state.coordinates;
-    a[index] = coords;
-    this.setState({coordinates : a});
-    console.log('\n index kalman: '+ index)
-    this.animateMarker(index);
-  }
-
-  showRealData(coordinate){
-    index = 3;
-    let a = this.state.coordinates;
-    //console.log('nemidoonam '+JSON.stringify(a[index]))
-    a[index] = coordinate;
-    //console.log('ey baba '+JSON.stringify(a[index]))
-    this.setState({coordinates : a});
-    //console.log(this.state.coordinates[index])
-    console.log('\n index real: '+ index)
-    this.animateMarker(index);
-  }
-
-  beforShowLocation(){
-    if (this.state.LocationArray.length == 10){
-      this.getAVGlocation();
-      this.getMedianLocation();
-      //this.getKalmanFilteredLocation();
-
-     // this.state.counter += 1;
-      // if(this.state.counter == 60){
-      //   this.sendsms(coordinates.latitude, coordinates.longitude);
-      //   this.setState({counter: 0});
-      // }
-
-      console.log('length '+this.state.LocationArray.length)
-      var array = [...this.state.LocationArray]; // make a separate copy of the array
-      filteredItems = array.slice(1, 10) // remove first element of locationArray
-      this.setState({LocationArray: filteredItems});
-    }
-  }
-
-  getCurrentLocation_func = () => {
-    RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
-    .then(data => {
-      this.state.timerForReadLocation = 1000;
-    }).catch(err => {
-      this.state.timerForReadLocation = 10000;
-    });
-    BackgroundGeolocation.getCurrentLocation(location => {
-      let coordinates = {latitude: location.latitude, longitude:location.longitude};
-      if (coordinates.latitude == this.state.coordinates.latitude
-         && coordinates.longitude == this.state.coordinates.longitude){
-        console.log("repeat");
-      }
-      else {
-        console.log("non-repeated Location by timer\n" + location.latitude + '\n' + location.longitude);
-          //this.setState({coordinates});
-          
-      }
-      //this.showRealData(coordinates);
-      
-      var index = 3; 
-      let b = this.state.speed;
-      b[index] = location.speed;
-      this.setState({speed: b})
-      console.log('puuuuuuuuushhhhhhhhhhhhhhhhhhh')
-      this.state.LocationArray.push(location);
-      this.beforShowLocation();
-     });
-  }
-
-  async componentDidMount() {
-    await requestPermission();
-    RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
-    .then(data => {
-      BackgroundGeolocation.start();
-      this.BackgroundGeolocationConfig();
-      console.log('hello');      
-
-      BackgroundGeolocation.getCurrentLocation(location => {
-        console.log('hello too'); 
-        this.init(location);
-      });
-      console.log('hello too too too'); 
-      let timer = setInterval(this.getCurrentLocation_func, this.state.timerForReadLocation);
-      this.setState({timer});
-      
-    }).catch(err => {
-    });
-  }
-
-  init(location){
-    console.log('hello too too'); 
-    let region = {
-      latitude : location.latitude,
-      longitude : location.longitude,
-      latitudeDelta : 0.01,
-      longitudeDelta : 0.01, 
-    }
-    this.setState({region});
-
-  coordinate = {
-    latitude: location.latitude,
-    longitude: location.longitude
-  }
-  let a = [];
-  let d = [require('./asset/marker3.png'), require('./asset/marker2.png'),
-  require('./asset/marker4.png'),require('./asset/marker1.png')];
-  let b = ['red', 'green', 'purple','yellow'];
-  let c = ['Median', 'AVG', 'Kalman','realData'];
-  for( x=0; x< 4; ++x){
-    a.push({
-      latitude: coordinate.latitude,
-      longitude: coordinate.longitude,
-      routeCoordinates: [],
-      distanceTravelled: 0,
-      prevLatLng: {},
-      coordinate: new AnimatedRegion({
-        latitude: coordinate.latitude,
-        longitude: coordinate.longitude,
-        latitudeDelta : 0.01,
-        longitudeDelta : 0.01, 
-      }),
-      color: b[x],
-      title: c[x],
-      image: d[x]
-    })
-  }
-  this.setState({Markers : a});
-  console.log(JSON.stringify(a));
   }
 
   componentWillUnmount() {
-    // unregister all event listeners
-   //Geolocation.clearWatch(this.watchID);;
     BackgroundGeolocation.removeAllListeners();
   }
 
@@ -449,74 +380,35 @@ class BgTracking extends Component {
       stopOnTerminate: false,
     });
 
-   BackgroundGeolocation.on('background', (location) => {
-      console.log('[INFO] App is in background');
-    });
+    // BackgroundGeolocation.on("location", (location) => {
+    //   let coordinates = {latitude: location.latitude, longitude:location.longitude};
+    //   if (coordinates.latitude == this.state.coordinates[3].latitude
+    //      && coordinates.longitude == this.state.coordinates[3].longitude){
+    //     console.log("repeat");
+    //   }
+    //   else {console.log("non-repeated Location by timer\n" + location.latitude + '\n' + location.longitude);}
+    //   var index = 3;
+    //   let b = this.state.speed;
+    //   b[index] = location.speed;
+    //   this.setState({speed: b})
 
-    BackgroundGeolocation.on('foreground', () => {
-      console.log('[INFO] App is in foreground');
-    });
+    //   this.showRealData(coordinates);
 
-    BackgroundGeolocation.on('authorization', (status) => {
-      console.log('[INFO] BackgroundGeolocation authorization status: ' + status);
-      if (status !== BackgroundGeolocation.AUTHORIZED) {
-        // we need to set delay or otherwise alert may not be shown
-        setTimeout(() =>
-          Alert.alert('App requires location tracking permission', 'Would you like to open app settings?', [
-            { text: 'Yes', onPress: () => BackgroundGeolocation.showAppSettings() },
-            { text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel' }
-          ]), 1000);
-      }
-    });
+    //   console.log('push')
+    //   this.state.LocationArray.push(location);
+    //   insertLocation('real', location.latitude, location.longitude);
+    //   this.beforShowLocation();
+    //  });
+  
+
+  //  BackgroundGeolocation.on('background', (location) => {
+  //     console.log('[INFO] App is in background');
+  //   });
+
+  //   BackgroundGeolocation.on('foreground', () => {
+  //     console.log('[INFO] App is in foreground');
+  //   });
    }
-
-   kalman = (location, lastLocation, constant) => {
-    const accuracy = Math.max(location.accuracy, 1);
-    const result = { ...location, ...lastLocation };
-
-    if (!lastLocation) {
-      result.variance = accuracy * accuracy;
-    } else {
-      const timestampInc =
-        location.time.getTime() - lastLocation.time.getTime();
-
-      if (timestampInc > 0) {
-        // We can tune the velocity and particularly the coefficient at the end
-        const velocity =
-          _calculateGreatCircleDistance(location, lastLocation) /
-          timestampInc *
-          constant;
-        result.variance += timestampInc * velocity * velocity / 1000;
-      }
-
-      const k = result.variance / (result.variance + accuracy * accuracy);
-      result.latitude += k * (location.latitude - lastLocation.latitude);
-      result.longitude += k * (location.longitude - lastLocation.longitude);
-      result.variance = (1 - k) * result.variance;
-    }
-
-    return {
-      ...location,
-      ..._.pick(result, ["latitude", "longitude", "variance"])
-    };
-  }
-
-  runKalmanOnLocations = (rawData, kalmanConstant) => {
-    rawData
-    .map(location => ({
-      ...location,
-      time: new Date(location.timestamp)
-    }))
-    .map(location => {
-      this.lastLocation = this.kalman(
-        location,
-        this.lastLocation,
-        kalmanConstant
-      );
-    // console.log('last loc \n')// + JSON.stringify(this.lastLocation))
-      this.setState({kalmanSolution: this.lastLocation});
-    });
-  }
 
   calcDistance = (newLatLng, index) => {
     const  prevLatLng  = this.state.Markers[index].prevLatLng;
@@ -535,72 +427,6 @@ class BgTracking extends Component {
   }
 }
 
-const styles = StyleSheet.create({ 
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: "flex-start",
-    alignItems: "center"
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject
-  },
-  bubble: {
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.7)",
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 20
-  },
-  latlng: {
-    width: 200,
-    alignItems: "stretch"
-  },
-  button: {
-    width: 80,
-    paddingHorizontal: 12,
-    alignItems: "center",
-    marginHorizontal: 10
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    marginVertical: 20,
-    backgroundColor: "transparent"
-  },
-  MarkerImage: {
-    width: 35,
-    height: 45,
-  },
-  button1: {
-    width: 100,
-    height: 45,
-    borderRadius: 25,
-    backgroundColor: '#16A085',
-    justifyContent: "center",
-    marginTop: 20,
-    alignItems: "center",
-    marginHorizontal: 7
-  },
-  btnView: {
-     marginBottom: 20,
-     justifyContent: "center",
-     flexDirection: "row-reverse",
-     alignContent: "space-between",
-   },
-   text: {
-    color: 'rgba(255,255,255,255)',
-    fontSize: 16,
-    textAlign: "center"
-  },
-  scrollView: {
-    position: "absolute",
-    bottom: 30,
-    left: 0,
-    right: 0,
-    paddingVertical: 10,
-  },
-});
-
-export default BgTracking;
 AppRegistry.registerComponent('test', () => App)
 
 // var las = 0;
@@ -708,3 +534,82 @@ AppRegistry.registerComponent('test', () => App)
       //       {enableHighAccuracy: true, timeout: 200, maximumAge: 1000, distanceFilter: 0.1}
       //     );
       //  }
+
+      //BackgroundGeolocation.on('authorization', (status) => {
+        //   console.log('[INFO] BackgroundGeolocation authorization status: ' + status);
+        //   if (status !== BackgroundGeolocation.AUTHORIZED) {
+        //     // we need to set delay or otherwise alert may not be shown
+        //     setTimeout(() =>
+        //       Alert.alert('App requires location tracking permission', 'Would you like to open app settings?', [
+        //         { text: 'Yes', onPress: () => BackgroundGeolocation.showAppSettings() },
+        //         { text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel' }
+        //       ]), 1000);
+        //   }
+        // });
+
+        
+  //  kalman = (location, lastLocation, constant) => {
+  //   const accuracy = Math.max(location.accuracy, 1);
+  //   const result = { ...location, ...lastLocation };
+
+  //   if (!lastLocation) {
+  //     result.variance = accuracy * accuracy;
+  //   } else {
+  //     const timestampInc =
+  //       location.time.getTime() - lastLocation.time.getTime();
+
+  //     if (timestampInc > 0) {
+  //       // We can tune the velocity and particularly the coefficient at the end
+  //       const velocity =
+  //         _calculateGreatCircleDistance(location, lastLocation) /
+  //         timestampInc *
+  //         constant;
+  //       result.variance += timestampInc * velocity * velocity / 1000;
+  //     }
+
+  //     const k = result.variance / (result.variance + accuracy * accuracy);
+  //     result.latitude += k * (location.latitude - lastLocation.latitude);
+  //     result.longitude += k * (location.longitude - lastLocation.longitude);
+  //     result.variance = (1 - k) * result.variance;
+  //   }
+
+  //   return {
+  //     ...location,
+  //     ..._.pick(result, ["latitude", "longitude", "variance"])
+  //   };
+  // }
+
+  // runKalmanOnLocations = (rawData, kalmanConstant) => {
+  //   rawData
+  //   .map(location => ({
+  //     ...location,
+  //     time: new Date(location.timestamp)
+  //   }))
+  //   .map(location => {
+  //     this.lastLocation = this.kalman(
+  //       location,
+  //       this.lastLocation,
+  //       kalmanConstant
+  //     );
+  //     this.setState({kalmanSolution: this.lastLocation});
+  //   });
+  // }
+
+  
+  // getKalmanFilteredLocation(){
+  //   var index = 2;
+  //   this.runKalmanOnLocations(this.state.LocationArray, this.state.kalmanConstant);
+
+  //   let coords = {latitude: parseFloat(JSON.stringify( this.state.kalmanSolution.latitude)),
+  //         longitude: parseFloat(JSON.stringify( this.state.kalmanSolution.longitude))};
+
+  //   let b = this.state.speed;
+  //   b[index] = parseFloat(JSON.stringify( this.state.kalmanSolution.speed));
+  //   this.setState({speed: b})
+
+  //   let a = this.state.coordinates;
+  //   a[index] = coords;
+  //   this.setState({coordinates : a});
+  //   console.log('\n index kalman: '+ index)
+  //   this.animateMarker(index);
+  // }

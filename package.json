@@ -8,7 +8,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "esm": "^3.2.25",
     "haversine": "^1.1.1",
+    "latlon-geohash": "^2.0.0",
     "lodash": "^4.17.15",
     "react": "16.8.6",
     "react-native": "^0.60.4",
@@ -19,6 +21,7 @@
     "react-native-maps": "^0.25.0",
     "react-native-mauron85-background-geolocation": "^0.5.2",
     "react-native-sms-listener": "0.0.1",
+    "react-native-sqlite-storage": "^4.0.0",
     "react-native-switch-selector": "^1.1.14"
   },
   "devDependencies": {
