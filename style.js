@@ -71,5 +71,12 @@ export const styles = StyleSheet.create({
         borderRadius: 20,
         color: 'transparent',
       },
+    clbStyle: {
+      position: 'absolute',//use absolute position to show button on top of the map
+      top: '80%', //for top align
+      //left: '80%',
+      alignSelf: 'center', //for align to right 
+      borderRadius: 20,
+    },
   });
   

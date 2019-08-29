@@ -8,7 +8,8 @@ import MapView, {Marker, AnimatedRegion, Polyline} from "react-native-maps";
 import haversine from "haversine";
 import {styles} from './style.js';
 import {requestPermission} from './permission.js';
-import {insertionSort} from './insertionSort.js';
+//import {insertionSort} from './insertionSort.js';
+import {CurrentLocationButton} from './component/CurrentLocationButton'
 import { initDatabase } from './initDatabase.js';
 import { insertLocation } from './insertLocations.js';
 import { deleteLacation } from './deleteLocation';
@@ -72,7 +73,7 @@ export default class BgTracking extends Component {
               showsIndoorLevelPicker={true}
               initialRegion={this.state.region}
               //region={ this.state.region }
-              onRegionChangeComplete={ region => this.setState({region}) }
+             // onRegionChangeComplete={ region => this.setState({region}) }
             >
               {this.state.Markers.map(poly => {
                 return (
@@ -115,6 +116,9 @@ export default class BgTracking extends Component {
                   <Text>Delete</Text>
               </TouchableOpacity>
               </View>
+              
+              <CurrentLocationButton cb ={() => {this.centerMap(500)}}/>            
+
           </View>
     );
   }
@@ -195,6 +199,13 @@ export default class BgTracking extends Component {
           if(key == "lat") lat = value
           if(key == "lon") long = value
         });
+        this.setState({region: {
+          latitude: lat,
+          longitude: long,
+          latitudeDelta: this.state.region.latitudeDelta,
+          longitudeDelta: this.state.region.latitudeDelta,
+        }});
+        console.log(JSON.stringify(this.state.region))
         this.setState({correct : 0})
         this.setState({count : 0})
         let coords = {latitude: lat, longitude: long};
@@ -207,6 +218,21 @@ export default class BgTracking extends Component {
     }
   }
      });
+  }
+
+  centerMap(d){
+    const {
+      latitude,longitude,
+      latitudeDelta,longitudeDelta
+    } = this.state.region
+
+    console.log(JSON.stringify(this.state.region))
+
+    this.map.animateToRegion({
+      latitude,longitude,latitudeDelta,longitudeDelta
+    }, d);
+    console.log(latitude+' '+longitude+' '+
+      latitudeDelta+' '+longitudeDelta)
   }
 
    componentDidMount() {
@@ -235,6 +261,7 @@ export default class BgTracking extends Component {
       longitudeDelta : 0.01,
     }});
 
+    this.centerMap(100)
   console.log('region: '+JSON.stringify(this.state.region));
   coordinate = {
     latitude: location.latitude,
