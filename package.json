@@ -8,6 +8,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-community/async-storage": "^1.6.1",
     "esm": "^3.2.25",
     "haversine": "^1.1.1",
     "latlon-geohash": "^2.0.0",
@@ -16,15 +17,23 @@
     "react-native": "^0.60.4",
     "react-native-android-location-enabler": "^1.2.0",
     "react-native-android-sms-listener": "^0.7.0",
+    "react-native-device-battery": "^2.0.0",
     "react-native-elements": "^1.1.0",
     "react-native-geolocation-service": "^3.0.0",
+    "react-native-gesture-handler": "^1.4.1",
     "react-native-get-sms-android": "^1.5.0",
     "react-native-maps": "^0.25.0",
+    "react-native-material-menu": "^1.0.0",
+    "react-native-material-textfield": "^0.12.0",
     "react-native-mauron85-background-geolocation": "^0.5.2",
+    "react-native-popup-menu": "^0.15.6",
+    "react-native-settings-list": "^1.8.0",
     "react-native-sms-listener": "0.0.1",
     "react-native-sqlite-storage": "^4.0.0",
     "react-native-switch-selector": "^1.1.14",
-    "react-native-vector-icons": "^6.6.0"
+    "react-native-vector-icons": "^6.6.0",
+    "react-navigation": "^3.12.1",
+    "react-number-format": "^4.2.0"
   },
   "devDependencies": {
     "@babel/core": "7.5.5",

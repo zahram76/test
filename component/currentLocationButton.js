@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {Dimensions, View, Text, TouchableOpacity, StyleSheet} from "react-native";
+import {Dimensions, View, Text, TouchableOpacity, StyleSheet, Image} from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 const height = Dimensions.get('window').height;
@@ -10,12 +10,12 @@ export const CurrentLocationButton = function(props){
     const bottom = props.bottom ? props.bottom : 65
     return(
         <View style={[styles.container, {top: '90%'}]}>
-            <MaterialIcons 
-                name='my-location' 
-                color='#000000'
-                size={25}
-                onPress ={() => { cb() }}
-            />
+            <TouchableOpacity onPress ={() => { cb() }}>
+            <Image 
+                source={require('../asset/myLocation.png')}
+                style={{width:28, height:28}}/>
+            </TouchableOpacity>
+            
         </View>
     )
 }

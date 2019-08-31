@@ -1,7 +1,7 @@
 import SQLite from "react-native-sqlite-storage";
 
 var DB = SQLite.openDatabase(
-    {name : "database", createFromLocation : "~database.sqlite"});
+    {name : "db", createFromLocation : "~db.sqlite"});
     
 export function deleteLacation(){
       DB.transaction((tx) => {

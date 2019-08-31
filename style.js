@@ -1,4 +1,7 @@
-import {StyleSheet} from "react-native";
+import {StyleSheet, Dimensions} from 'react-native';
+
+const {width : WIDTH} = Dimensions.get('window'); 
+const {height : HEIGHT} = Dimensions.get('window'); 
 
 export const styles = StyleSheet.create({
     container: {
@@ -39,7 +42,7 @@ export const styles = StyleSheet.create({
       width: 100,
       height: 45,
       borderRadius: 25,
-      backgroundColor: '#16A085',
+      backgroundColor: '#023D5A',
       justifyContent: "center",
       marginTop: 20,
       alignItems: "center",
@@ -56,6 +59,20 @@ export const styles = StyleSheet.create({
       fontSize: 16,
       textAlign: "center"
     },
+    Addtext: {
+      color: '#023D5A',
+      fontSize: 18,
+      textAlign: "center"
+    },
+    
+    backcontainer:{
+      flex: 1,
+      alignItems: "center",
+      width: null,
+      height: null,
+      justifyContent: "center",
+      backgroundColor: '#ffffff',
+    },
     scrollView: {
       position: "absolute",
       bottom: 30,
@@ -66,17 +83,147 @@ export const styles = StyleSheet.create({
     MapTypeMenuStyle: {
         position: 'absolute',//use absolute position to show button on top of the map
         top: '3%', //for top align
-        //left: '80%',
-        alignSelf: 'center', //for align to right 
-        borderRadius: 20,
+        left: WIDTH-70,
+        alignSelf: 'flex-end', //for align to right 
+        borderRadius: 50,
         color: 'transparent',
       },
-    clbStyle: {
-      position: 'absolute',//use absolute position to show button on top of the map
-      top: '80%', //for top align
-      //left: '80%',
-      alignSelf: 'center', //for align to right 
-      borderRadius: 20,
+    btnEye: {
+      position: 'absolute',
+      top: 10,
+      right: 42
     },
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#F5FCFF',
+    },
+    backcontainer:{
+      flex: 1,
+      alignItems: "center",
+      width: null,
+      height: null,
+      justifyContent: "center",
+      backgroundColor: '#ffffff',
+    },
+    scrolStyle: {
+     flex: 1,
+     backgroundColor: 'white',
+    },
+    inputContainer: {
+      marginTop: 7
+    },
+    input: {
+      width: WIDTH-55,
+      height: 45,
+      borderRadius: 25,
+      fontSize: 16,
+      paddingLeft: 45,
+      backgroundColor: 'rgba(0,0,0,0.1)',
+      color: '#000000',
+      marginHorizontal: 25
+    },
+    inputIcon: {
+      position: 'absolute',
+      top: 14,
+      left: 42
+    },
+    btnEye: {
+      position: 'absolute',
+      top: 10,
+      right: 42
+    },
+    btnContainer:{
+      flexDirection: "row",
+    },
+    btnLogin: { 
+      width: WIDTH*(0.3),
+      height: 45,
+      borderRadius: 25,
+      backgroundColor: '#023D5A',
+      justifyContent: "center",
+      marginTop: 10,
+      alignItems: "center",
+      marginHorizontal: 7
+    },
+    btn:{
+      height: 45,
+      borderRadius: 25,
+      color: '#023D5A',
+      backgroundColor: '#ffffff',
+      justifyContent: "center",
+      marginTop: 10,
+      alignItems: "center",
+      marginRight: 7, 
+    },
+    logo: {
+      width: 100,
+      height: 100
+    },
+    logoContainer: {
+      alignItems: "center",
+      marginTop: 50,
+      marginBottom: 30
+    },
+    imageContainer: {
+      marginTop: 40,
+      justifyContent: "flex-end",
+      flexDirection: "row-reverse",
+      alignContent: "space-between",
+    },
+    grandmother: {
+      marginTop: 26,
+      width: 150,
+      height: 225,
+      position: "relative",
+    },
+    grandfather: {
+      width: 170,
+      height: 255,
+      position: "relative",
+    },
+    grandmotherSignUp: {
+      marginTop: 18,
+      width: 120,
+      height: 195,
+      position: "relative",
+    },
+    grandfatherSignUp: {
+      width: 140,
+      height: 215,
+      position: "relative",
+    },
+    checkboxContainer:{
+      backgroundColor: '#ffffff',
+      borderColor: '#ffffff'
+    },
+    addinput: {
+      zIndex: 9,
+      //borderBottomColor: '#BFBFBF',
+      borderBottomWidth: 2,
+      height: 45,
+      fontSize: 16,
+      //paddingLeft: 45, // if have icon
+      color: '#000000',
+      marginLeft: 25,
+      marginRight: 10
+    },
+    felan: {
+      zIndex: 9,
+      position: 'absolute',
+      height: 45,
+      backgroundColor: '#fff',
+      left: '5%',
+      top: '2%',
+      borderRadius: 50,
+      shadowColor: '#000000',
+      elevation: 7,
+      shadowRadius: 5,
+      shadowOpacity: 1.0,
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      alignSelf: 'center'
+  }
   });
   
