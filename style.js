@@ -3,6 +3,8 @@ import {StyleSheet, Dimensions} from 'react-native';
 const {width : WIDTH} = Dimensions.get('window'); 
 const {height : HEIGHT} = Dimensions.get('window'); 
 
+const color = '#028687';
+
 export const styles = StyleSheet.create({
     container: {
       ...StyleSheet.absoluteFillObject,
@@ -42,7 +44,7 @@ export const styles = StyleSheet.create({
       width: 100,
       height: 45,
       borderRadius: 25,
-      backgroundColor: '#023D5A',
+      backgroundColor: color,
       justifyContent: "center",
       marginTop: 20,
       alignItems: "center",
@@ -60,7 +62,7 @@ export const styles = StyleSheet.create({
       textAlign: "center"
     },
     Addtext: {
-      color: '#023D5A',
+      color: color,
       fontSize: 18,
       textAlign: "center"
     },
@@ -141,7 +143,7 @@ export const styles = StyleSheet.create({
       width: WIDTH*(0.3),
       height: 45,
       borderRadius: 25,
-      backgroundColor: '#023D5A',
+      backgroundColor: color,
       justifyContent: "center",
       marginTop: 10,
       alignItems: "center",
@@ -150,7 +152,7 @@ export const styles = StyleSheet.create({
     btn:{
       height: 45,
       borderRadius: 25,
-      color: '#023D5A',
+      color: color,
       backgroundColor: '#ffffff',
       justifyContent: "center",
       marginTop: 10,
@@ -201,12 +203,12 @@ export const styles = StyleSheet.create({
     addinput: {
       zIndex: 9,
       //borderBottomColor: '#BFBFBF',
-      borderBottomWidth: 2,
-      height: 45,
+      borderBottomWidth: 1,
+      height: 40,
       fontSize: 16,
       //paddingLeft: 45, // if have icon
       color: '#000000',
-      marginLeft: 25,
+      marginLeft: 15,
       marginRight: 10
     },
     felan: {

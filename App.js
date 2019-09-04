@@ -15,30 +15,33 @@ import Setting from './screens/Setting';
 import AddPerson from './screens/AddPerson.js';
 import AuthLoadingScreen from './screens/AuthLoading.js';
 import FlatListComponent from './component/FlatList.js'
+import imagePicker from './screens/imagePicker.js';
+
+const color = '#028687';
 
 const AppStack = createStackNavigator({
   Map: {
     screen: Map,
   },
-   Setting: {
-    screen: Setting,
-    navigationOptions: {
-      title: 'Setting',
-      headerStyle: {  
-        backgroundColor: '#023D5A',
-      },
-      headerTintColor: '#fff',
-      headerTitleStyle: {
-        fontWeight: 'bold',
-      },
-    },
-   },
+  //  Setting: {
+  //   screen: Setting,
+  //   navigationOptions: {
+  //     title: 'Setting',
+  //     headerStyle: {  
+  //       backgroundColor: '#023D5A',
+  //     },
+  //     headerTintColor: '#fff',
+  //     headerTitleStyle: {
+  //       fontWeight: 'bold',
+  //     },
+  //   },
+  // },
    Profile: {
     screen: Profile,  
     navigationOptions: {
       title: 'Profile',
       headerStyle: {
-        backgroundColor: '#023D5A',
+        backgroundColor: color,
       },
       headerTintColor: '#fff',
       headerTitleStyle: {
@@ -48,10 +51,26 @@ const AppStack = createStackNavigator({
    },
    AddPerson: {
     screen: AddPerson,
+   },
+  FlatListComponent: {
+    screen: FlatListComponent,
     navigationOptions: {
-      title: 'Add Person',
+      title: 'flat list',
       headerStyle: {
-        backgroundColor: '#023D5A',
+        backgroundColor: color,
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    },
+  },
+  imagePicker: {
+    screen: imagePicker,
+    navigationOptions: {
+      title: 'image Picker',
+      headerStyle: {  
+        backgroundColor: color,
       },
       headerTintColor: '#fff',
       headerTitleStyle: {
@@ -59,19 +78,6 @@ const AppStack = createStackNavigator({
       },
     },
    },
-  FlatListComponent: {
-    screen: FlatListComponent,
-    navigationOptions: {
-      title: 'flat list',
-      headerStyle: {
-        backgroundColor: '#023D5A',
-      },
-      headerTintColor: '#fff',
-      headerTitleStyle: {
-        fontWeight: 'bold',
-      },
-    },
-  }
 });
 
 const AuthStack = createStackNavigator({ 

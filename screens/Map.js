@@ -1,13 +1,14 @@
-import React, { Component } from 'react';
+import React, {Component, Fragment} from 'react';
 import {Dimensions, View, Text, AppRegistry, TouchableOpacity, Image} from "react-native";
 import BackgroundGeolocation from 'react-native-mauron85-background-geolocation';
 import SmsAndroid  from 'react-native-get-sms-android';
 import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
-import MapView, {Marker, AnimatedRegion, Polyline} from "react-native-maps";
+import MapView, {Marker, AnimatedRegion, Polyline, Circle} from "react-native-maps";
 import Menu, { MenuItem, MenuDivider } from 'react-native-material-menu';
 import Icon from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-community/async-storage";
 import DeviceBattery from 'react-native-device-battery';
+//import RNFetchBlob from 'react-native-fetch-blob '
 import Geohash from 'latlon-geohash';
 import haversine from "haversine";
 import {CurrentLocationButton} from '../component/CurrentLocationButton'
@@ -16,6 +17,9 @@ import { insertLocation } from '../functions/insertLocations.js';
 import { deleteLacation } from '../functions/deleteLocation';
 import {requestPermission} from '../functions/permission.js';
 import {styles} from '../style.js';
+
+
+const color = '#028687';
 
 const LATITUDE =  0;
 const LONGITUDE = 0;
@@ -36,7 +40,7 @@ export default class Map extends Component {
       message: '',
       mapType: "standard",
       LocationArray:[],
-      timerForReadLocation: 300,
+      timerForReadLocation: 1000,
       kalmanConstant: 500,
       kalmanSolution: null,
       Markers:[],
@@ -59,20 +63,24 @@ export default class Map extends Component {
        count : 0,
        correct : 0,
        batteryState: 0,
+       accuracy: 0,
     };
+    
+    this.start()
   }
 
   render(){
     return (
-        <View style={{flex: 1}}>
+       //<View style={{flex: 1}}>
+       <Fragment>
             <MapView
               ref={ref => {this.map = ref}}
               style={{flex:1, height: '100%', width: '100%'}}
               mapType={this.state.mapType}
-              loadingEnabled={true}
+             // loadingEnabled={true}
               showsUserLocation={true}
               rotateEnabled={true}
-              showsIndoorLevelPicker={true}
+              //showsIndoorLevelPicker={true}
               initialRegion={this.state.region}>
               {this.state.Markers.map(poly => {
                 return (
@@ -97,19 +105,45 @@ export default class Map extends Component {
                 })}
             </MapView>
 
+            <Circle
+                  center={{
+                     "latitude": 32.66539416,
+                     "longitude":  51.70891995
+                  }}
+                  radius={50}
+                  strokeColor={"#484848"}
+                  strokeWidth={5}
+                  fillColor={"#fff"}
+                  zIndex={1}
+               />
+               
+               {/* Destination Circle */}
+               <Circle
+                  center={{
+                     "latitude": 32.66539416,
+                     "longitude":  51.70891995
+                  }}
+                  radius={50}
+                  strokeColor={"#484848"}
+                  strokeWidth={5}
+                  fillColor={"#fff"}
+                  zIndex={1}
+               />
+
               <View style={styles.felan}>
                 <Text > Real Speed : {this.state.speed[0]} </Text>
                 <Text > Battery State : {this.state.batteryState} </Text>
-              </View>
-
-              <View style={styles.MapTypeMenuStyle}>
-                <MapTypeMenu onChange={mapType => this.setState({mapType})}></MapTypeMenu>
+                <Text > accuracy : {this.state.accuracy} </Text>
               </View>
 
               <CurrentLocationButton cb ={() => {this.centerMap(500)}}/>     
-          </View>
+          </Fragment>
     );
   }
+
+  // <View style={styles.MapTypeMenuStyle}>
+  //               <MapTypeMenu onChange={mapType => this.setState({mapType})}></MapTypeMenu>
+  //             </View>
 
   animateMarker (index){
     const routeCoordinates = this.state.Markers[index].routeCoordinates;
@@ -140,68 +174,75 @@ export default class Map extends Component {
     let a = this.state.coordinates;
     a[index] = coordinate;
     this.setState({coordinates : a});
-    console.log('\n index real: '+ index)
+    //console.log('\n index real: '+ index)
     this.animateMarker(index);
   }
 
   getCurrentLocation_func = () => {
     RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
     .then(data => {
-      this.state.timerForReadLocation = 300;
+      this.state.timerForReadLocation = 1000;
     }).catch(err => {
       this.state.timerForReadLocation = 10000;
     });
     BackgroundGeolocation.getCurrentLocation(location => {
+      
       let coord = {latitude: location.latitude, longitude:location.longitude};
       if (coord.latitude == this.state.coord.latitude
          && coord.longitude == this.state.coord.longitude){
-      //  console.log("repeat "+  location.latitude+' '+ coord.latitude );
       }
       else {
-       // console.log("non-repeated Location by timer\n" + location.latitude + '\n' + location.longitude);
         this.setState({coord})
       }
       var index = 0;
       let b = this.state.speed;
       b[index] = location.speed;
+      this.setState({accuracy: location.accuracy}); 
       this.setState({speed: b});
+      this.setState({region: {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: this.state.region.latitudeDelta,
+        longitudeDelta: this.state.region.latitudeDelta,
+      }});
+      this.showRealData(coord);
 
-      if(this.state.count == 0){
-        this.setState({geohash : Geohash.encode(location.latitude, location.longitude, 8)});
-        this.loc = location;
-       // console.log('first encoded geohash : ' + this.state.geohash)
-        this.setState({count: this.state.count+1})
-      }
-      else {
-        var g1 = Geohash.encode(location.latitude, location.longitude, 8);
-       // console.log( this.state.count + ' encoded geohash : ' + g1)
-        if(this.state.geohash == g1) this.setState({correct : this.state.correct+1});
-       // console.log('correct : ' + this.state.correct)
-        this.setState({count: this.state.count+1})
+      // if(this.state.count == 0){
+      //   this.setState({geohash : Geohash.encode(location.latitude, location.longitude, 8)});
+      //   this.loc = location;
+      //  // console.log('first encoded geohash : ' + this.state.geohash)
+      //   this.setState({count: this.state.count+1})
+      // }
+      // else {
+    //     var g1 = Geohash.encode(location.latitude, location.longitude, 8);
+    //    // console.log( this.state.count + ' encoded geohash : ' + g1)
+    //     if(this.state.geohash == g1) this.setState({correct : this.state.correct+1});
+    //    // console.log('correct : ' + this.state.correct)
+    //     this.setState({count: this.state.count+1})
 
-      if(this.state.correct > 3){
-        var latlong = Geohash.decode(this.state.geohash);
-       // console.log( this.state.count + ' decoded geohash latlong  : ' + JSON.stringify(latlong))
-       // console.log('location : ' +  JSON.stringify(this.loc))
-        var lat,long;
-        JSON.parse(JSON.stringify(latlong), (key,value) => { 
-          if(key == "lat") lat = value
-          if(key == "lon") long = value
-        });
-        this.setState({region: {
-          latitude: lat,
-          longitude: long,
-          latitudeDelta: this.state.region.latitudeDelta,
-          longitudeDelta: this.state.region.latitudeDelta,
-        }});
-       // console.log(JSON.stringify(this.state.region))
-        this.setState({correct : 0}); this.setState({count: 0}); 
-        let coords = {latitude: lat, longitude: long};
-        this.showRealData(coords);
-      } 
-      else if( this.state.count > 5) {
-        this.setState({correct : 0}); this.setState({count: 0}); }
-    }
+    //   if(this.state.correct > 3){
+    //     var latlong = Geohash.decode(this.state.geohash);
+    //    // console.log( this.state.count + ' decoded geohash latlong  : ' + JSON.stringify(latlong))
+    //    // console.log('location : ' +  JSON.stringify(this.loc))
+    //     var lat,long;
+    //     JSON.parse(JSON.stringify(latlong), (key,value) => { 
+    //       if(key == "lat") lat = value
+    //       if(key == "lon") long = value
+    //     });
+        // this.setState({region: {
+        //   latitude: lat,
+        //   longitude: long,
+        //   latitudeDelta: this.state.region.latitudeDelta,
+        //   longitudeDelta: this.state.region.latitudeDelta,
+        // }});
+    //    // console.log(JSON.stringify(this.state.region))
+    //     this.setState({correct : 0}); this.setState({count: 0}); 
+        // let coords = {latitude: lat, longitude: long};
+        // this.showRealData(coords);
+    //   } 
+    //   else if( this.state.count > 5) {
+    //     this.setState({correct : 0}); this.setState({count: 0}); }
+    // }
     });
   }
 
@@ -224,7 +265,7 @@ export default class Map extends Component {
     this.setState({batteryState: state.level})
   };
 
-   componentDidMount() {
+   start() {
      requestPermission();
     RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
     .then(data => {
@@ -324,12 +365,11 @@ export default class Map extends Component {
     });
   }
 
-  
   static navigationOptions = ({ navigation }) => {
     return {
         title: 'Map',
         headerStyle: {
-          backgroundColor: '#023D5A',
+          backgroundColor: color,
           barStyle: "light-content", // or directly
         },
         headerTintColor: '#fff',
@@ -349,23 +389,28 @@ export default class Map extends Component {
                 <MenuItem onPress={() => {
                   this._menu.hide()
                   }} textStyle={{fontSize: 16}} disabled>Map</MenuItem>
-                <MenuItem onPress={() => {
+                {/* <MenuItem onPress={() => {
                   this._menu.hide()
                   navigation.navigate('Setting')
-                  }} textStyle={{color: '#000', fontSize: 16}}>Setting</MenuItem>
+                  }} textStyle={{color: '#000', fontSize: 16}}>Setting</MenuItem> */}
                 <MenuItem  onPress={() =>{
                   this._menu.hide()
                   navigation.navigate('Profile')
                   }} textStyle={{color: '#000',fontSize: 16}}>Profile</MenuItem>
+                <MenuItem  onPress={() =>{
+                  this._menu.hide()
+                  navigation.navigate('FlatListComponent')
+                  }} textStyle={{color: '#000',fontSize: 16}}>flat list</MenuItem>
                 <MenuItem onPress={() =>{
                   this._menu.hide()
                   AsyncStorage.clear();
                   navigation.navigate('Auth')
                   }}  textStyle={{color: '#000', fontSize: 16}}>Sign out</MenuItem>
+                
             </Menu>
             <TouchableOpacity 
               style={{
-                paddingHorizontal:8, 
+                //paddingHorizontal:8, 
                 height: '100%', 
                 alignItems:'center', 
                 justifyContent: 'center',
@@ -373,7 +418,7 @@ export default class Map extends Component {
               }}
               onPress={() => navigation.navigate('AddPerson')}>
               <Image source={require('../asset/addU.png')} 
-              style={{alignSelf:'center', width: 23, height: 23}} resizeMode='contain'
+              style={{alignSelf:'center', width: 24, height: 24}} resizeMode='contain'
               />
             </TouchableOpacity>
           </View>

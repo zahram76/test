@@ -9,10 +9,13 @@ export async function requestPermission() {
         PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] ,
         PermissionsAndroid.PERMISSIONS.NOTIFICATIONS,
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
         {
           title: 'App',
           message:
-            'App needs access to your SMS and read your loacation',
+            'App needs access to your SMS, read your loacation,\n camera, write external storage',
           buttonNeutral: 'Ask Me Later',
           buttonNegative: 'Cancel',
           buttonPositive: 'OK',

@@ -15,7 +15,6 @@ export const CurrentLocationButton = function(props){
                 source={require('../asset/myLocation.png')}
                 style={{width:28, height:28}}/>
             </TouchableOpacity>
-            
         </View>
     )
 }
