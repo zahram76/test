@@ -65,7 +65,6 @@ export default class Map extends Component {
        batteryState: 0,
        accuracy: 0,
     };
-    
     this.start()
   }
 
@@ -84,12 +83,25 @@ export default class Map extends Component {
               initialRegion={this.state.region}>
               {this.state.Markers.map(poly => {
                 return (
-                  <Polyline 
+                  <Polyline
                     key={`poly_${poly.id}`}
                     coordinates={poly.routeCoordinates}
                     strokeWidth={5} strokeColor= {poly.color}>
                   </Polyline> );
                })}
+              {this.state.Markers.map(marker => {
+                return (
+                  <Marker
+                    //ref={ref =>  {this.marker = ref}}
+                      key={`marker1_${marker.id}`}
+                      tracksViewChanges={true}
+                      coordinate={{
+                      latitude: marker.latitude,
+                      longitude: marker.longitude}}
+                      pinColor={marker.color}
+                      title={marker.title}>
+                  </Marker> );
+                })}
               {this.state.Markers.map(marker => {
                 return (
                   <Marker.Animated
@@ -142,8 +154,8 @@ export default class Map extends Component {
   }
 
   // <View style={styles.MapTypeMenuStyle}>
-  //               <MapTypeMenu onChange={mapType => this.setState({mapType})}></MapTypeMenu>
-  //             </View>
+  //    <MapTypeMenu onChange={mapType => this.setState({mapType})}></MapTypeMenu>
+  //  </View>
 
   animateMarker (index){
     const routeCoordinates = this.state.Markers[index].routeCoordinates;
