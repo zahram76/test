@@ -11,13 +11,11 @@ import Icon from "react-native-vector-icons/Ionicons";
 import AsyncStorage from '@react-native-community/async-storage';
 
 export const Setting = function(props){ //({ get, props })=>{
-    var bgColor = '#DCE3F4';
-
+    const navigation = props.navigation;
     const cb = props.cb ? props.cb : ()=> console.log('callout function not call')
     return (     
-      <View style={{backgroundColor:'#EFEFF4',flex:1}}>
-        <SettingsList borderColor='#c8c7cc' defaultItemSize={50}>
-          {/* <SettingsList.Header headerStyle={{marginTop:15}}/> */}
+      <View style={{backgroundColor: '#F4FFFF',flex:1, marginTop: 45}}>
+        <SettingsList borderColor='#c8c7cc' defaultItemSize={56}>
           {/* <SettingsList.Item
             icon={
                 <Image style={styles.imageStyle} source={require('../images/cartoon-marker-48.png')}/>
@@ -29,44 +27,39 @@ export const Setting = function(props){ //({ get, props })=>{
             title='Background Geo'
           /> */}
           <SettingsList.Item
-            icon={<Image style={styles.imageStyle} source={require('../images/cartoon-marker-48.png')}/>}
-            title='Accountt'
+            icon={<Image style={styles.imageStyle} source={require('../asset/user-account.png')}/>}
+            title='Account'
             titleInfo=' '
             titleInfoStyle={styles.titleInfoStyle}
-            onPress={() => Alert.alert('Route to add account Page')}
+            onPress={() => navigation.navigate('AccountSetting')}
           />
           <SettingsList.Item
-            icon={<Image style={styles.imageStyle} source={require('../images/cartoon-marker-48.png')}/>}
-            title='Markers'
+            icon={<Image style={styles.imageStyle} source={require('../asset/map-setting.png')}/>}
+            title='Map type'
             titleInfo=' '
             titleInfoStyle={styles.titleInfoStyle}
-            onPress={() => Alert.alert('Route to markers Page')}
+            onPress={() => navigation.navigate('MapSetting')}
           />
           <SettingsList.Item
-            icon={<Image style={styles.imageStyle} source={require('../images/cartoon-marker-48.png')}/>}
-            title='Distance filter'
+            icon={<Image style={styles.imageStyle} source={require('../asset/marker-setting.png')}/>}
+            title='Marker'
             onPress={() => Alert.alert('Route To distance filter Page')}
           />
           <SettingsList.Item
-            icon={<Image style={styles.imageStyle} source={require('../images/cartoon-marker-48.png')}/>}
-            title='Map'
+            icon={<Image style={styles.imageStyle} source={require('../asset/users-group.png')}/>}
+            title='Tracker user'
             titleInfo=' '
             titleInfoStyle={styles.titleInfoStyle}
-            onPress={() => Alert.alert('Route To map setting Page')}
+            onPress={() => navigation.navigate('TrackerUser')}
           />
-          <SettingsList.Header headerStyle={{marginTop:15}}/>
+          <SettingsList.Header headerStyle={{marginTop:4}}/>
           <SettingsList.Item
-            icon={<Image style={styles.imageStyle} source={require('../images/cartoon-marker-48.png')}/>}
+            icon={<Image style={styles.imageStyle} source={require('../asset/notification.png')}/>}
             title='Notifications'
             onPress={() => Alert.alert('Route To Notifications Page')}
           />
           <SettingsList.Item
-            icon={<Image style={styles.imageStyle} source={require('../images/cartoon-marker-48.png')}/>}
-            title='Theme'
-            onPress={() => Alert.alert('Route To Theme Page')}
-          />
-          <SettingsList.Item
-            icon={<Image style={styles.imageStyle} source={require('../images/cartoon-marker-48.png')}/>}
+            icon={<Image style={styles.imageStyle} source={require('../asset/setting.png')}/>}
             title='General setting'
             onPress={() => Alert.alert('Route To Do Not Disturb Page')}
           />

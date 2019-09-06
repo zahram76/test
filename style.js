@@ -3,7 +3,7 @@ import {StyleSheet, Dimensions} from 'react-native';
 const {width : WIDTH} = Dimensions.get('window'); 
 const {height : HEIGHT} = Dimensions.get('window'); 
 
-const color = '#028687';
+const color = '#349e9f';
 
 export const styles = StyleSheet.create({
     container: {
@@ -208,8 +208,8 @@ export const styles = StyleSheet.create({
       fontSize: 16,
       //paddingLeft: 45, // if have icon
       color: '#000000',
-      marginLeft: 15,
-      marginRight: 10
+      marginLeft: 25,
+      marginRight: 25
     },
     felan: {
       zIndex: 9,
@@ -226,6 +226,13 @@ export const styles = StyleSheet.create({
       justifyContent: 'space-around',
       alignItems: 'center',
       alignSelf: 'center'
+  },
+  imageStyle:{
+    width: 22,
+    height: 22,
+    alignSelf: 'center',
+    left: 6,
+    right: 10
   }
   });
   

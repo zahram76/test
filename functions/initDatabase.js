@@ -3,13 +3,13 @@ import SQLite from "react-native-sqlite-storage";
 
 var DB = SQLite.openDatabase(
     {name : "db", createFromLocation : "~db.sqlite"});
-
+var settingFirstInsert = false;
 export function initDatabase(){
   
     console.log("Database OPEN");
       DB.transaction((tx) => {
         console.log("execute transaction");
-        tx.executeSql('CREATE TABLE IF NOT EXISTS Users(user_id INTEGER PRIMARY KEY AUTOINCREMENT, phone_no VARCHAR(12) unique not null , first_name VARCHAR(20) not null, last_name VARCKAR(20) not null, user_image Blob )', [], (tx, results) => {
+        tx.executeSql('CREATE TABLE IF NOT EXISTS Users(user_id INTEGER PRIMARY KEY AUTOINCREMENT, phone_no VARCHAR(12) unique not null , first_name VARCHAR(20) not null, last_name VARCKAR(20) not null, user_image Blob, sending_setting text not null, interval numeric)', [], (tx, results) => {
           var len = results.rows.length;
           console.log("\n Users ");
           console.log(JSON.stringify(results) + ' ' + len);
@@ -26,9 +26,16 @@ export function initDatabase(){
         });
         tx.executeSql('CREATE TABLE IF NOT EXISTS Settings(setting_name text primary key, value text not null)', [], (tx, results) => {
           var len = results.rows.length;
-          console.log("\n Settings ");
+          //settingFirstInsert = true;
+          console.log("\n Settings "+ settingFirstInsert);
           console.log(JSON.stringify(results) + ' ' + len);
         });
-    });
-    //});
+          console.log("\n insert into settings aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ");
+          tx.executeSql('insert into Settings(setting_name, value) values(?,?)', ['mapType','standard'], (tx, results) => {
+            var len = results.rowsAffected;
+            console.log("\n insert maptype ");
+            console.log(JSON.stringify(results) + ' ' + len);
+          });
+      });
+
 }

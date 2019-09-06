@@ -8,7 +8,7 @@ import Menu, { MenuItem, MenuDivider } from 'react-native-material-menu';
 import Icon from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-community/async-storage";
 import DeviceBattery from 'react-native-device-battery';
-//import RNFetchBlob from 'react-native-fetch-blob '
+import SQLite from "react-native-sqlite-storage";
 import Geohash from 'latlon-geohash';
 import haversine from "haversine";
 import {CurrentLocationButton} from '../component/CurrentLocationButton'
@@ -17,20 +17,17 @@ import { insertLocation } from '../functions/insertLocations.js';
 import { deleteLacation } from '../functions/deleteLocation';
 import {requestPermission} from '../functions/permission.js';
 import {styles} from '../style.js';
+var RNFS = require('react-native-fs');
 
-
-const color = '#028687';
-
+const color = '#349e9f';
+var DB = SQLite.openDatabase({name : "db", createFromLocation : "~db.sqlite"});
 const LATITUDE =  0;
 const LONGITUDE = 0;
 let { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
 const LATITUDE_DELTA = 0.01;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
-const options = [
-  { label: "satellite", value: "hybrid" },
-  { label: "standard", value: "standard" },
-];
+
 
 export default class Map extends Component {
   constructor(){
@@ -70,16 +67,13 @@ export default class Map extends Component {
 
   render(){
     return (
-       //<View style={{flex: 1}}>
        <Fragment>
             <MapView
               ref={ref => {this.map = ref}}
               style={{flex:1, height: '100%', width: '100%'}}
               mapType={this.state.mapType}
-             // loadingEnabled={true}
               showsUserLocation={true}
               rotateEnabled={true}
-              //showsIndoorLevelPicker={true}
               initialRegion={this.state.region}>
               {this.state.Markers.map(poly => {
                 return (
@@ -117,31 +111,6 @@ export default class Map extends Component {
                 })}
             </MapView>
 
-            <Circle
-                  center={{
-                     "latitude": 32.66539416,
-                     "longitude":  51.70891995
-                  }}
-                  radius={50}
-                  strokeColor={"#484848"}
-                  strokeWidth={5}
-                  fillColor={"#fff"}
-                  zIndex={1}
-               />
-               
-               {/* Destination Circle */}
-               <Circle
-                  center={{
-                     "latitude": 32.66539416,
-                     "longitude":  51.70891995
-                  }}
-                  radius={50}
-                  strokeColor={"#484848"}
-                  strokeWidth={5}
-                  fillColor={"#fff"}
-                  zIndex={1}
-               />
-
               <View style={styles.felan}>
                 <Text > Real Speed : {this.state.speed[0]} </Text>
                 <Text > Battery State : {this.state.batteryState} </Text>
@@ -163,11 +132,9 @@ export default class Map extends Component {
     const { latitude, longitude } = this.state.coordinates[index];
     const newCoordinate = { latitude, longitude };
     
-    if (Platform.OS === "android") {
       if (this.marker) {
         this.marker._component.animateMarkerToCoordinate(newCoordinate, 500);
       }
-    } else { coordinate.timing(newCoordinate).start(); }
 
     let a = this.state.Markers; //creates the clone of the state
     a[index] = {latitude,
@@ -186,7 +153,6 @@ export default class Map extends Component {
     let a = this.state.coordinates;
     a[index] = coordinate;
     this.setState({coordinates : a});
-    //console.log('\n index real: '+ index)
     this.animateMarker(index);
   }
 
@@ -258,19 +224,79 @@ export default class Map extends Component {
     });
   }
 
+  initSetting(){
+    console.log(' map for init setting');
+    DB.transaction((tx) => {
+      console.log("execute transaction");
+        tx.executeSql('select value from Settings where setting_name=?', ['mapType'], (tx, results) => {
+              console.log('Results', results.rows.length);
+              if (results.rows.length > 0) {
+                this.state.mapType = results.rows.item(0).value
+                console.log('map inti setting : ' + this.state.mapType)
+              } else { console.log('can not find map type setting ') }  
+        });
+    });
+  }
+
+  componentDidMount(){
+    this.initSetting();
+    this.createDir();
+    const { navigation } = this.props;
+    this.focusListener = navigation.addListener('didFocus', () => {
+      if(this.props.navigation.state.params != null){
+        console.log(' navigation param : ' + JSON.stringify(this.props.navigation.state.params));
+        const str = JSON.stringify(this.props.navigation.state.params);
+        JSON.parse(str, (key,value) => {
+          if(key == 'name' && value == 'profile'){
+          console.log(value);
+          this.initSetting();
+        }
+        // else if(key == 'name' && value == 'adduser'){
+          
+        // }
+        })  
+      } else { console.log( ' is nul ')}
+    });
+  }
+
+  createDir(){
+    RNFS.readDir(RNFS.DocumentDirectoryPath) // On Android, use "RNFS.DocumentDirectoryPath" (MainBundlePath is not defined)
+    .then((result) => {
+      console.log('path: '+ RNFS.DocumentDirectoryPath)
+      console.log('GOT RESULT ', result);
+      // stat the first file
+      RNFS.mkdir(RNFS.DocumentDirectoryPath+'/images').then( result => {
+        console.log('GOT RESULT mkdir ', result);
+      }).then(contents => {
+        console.log('contents mkdir'+ contents);
+      }) .catch((err) => {
+        console.log('contents error mkdir' + err.message, err.code);
+      });
+      return Promise.all([RNFS.stat(result[0].path), result[0].path]);
+    })
+    .then((statResult) => {
+      if (statResult[0].isFile()) {
+        // if we have a file, read it
+        return RNFS.readFile(statResult[1], 'utf8');
+      }
+      return 'no file';
+    })
+    .then((contents) => {
+      // log the file contents
+      console.log('contents '+ contents);
+    })
+    .catch((err) => {
+      console.log('contents ' + err.message, err.code);
+    });
+  }
+
   centerMap(d){
     const {
       latitude,longitude,
       latitudeDelta,longitudeDelta
     } = this.state.region
-
-    console.log(JSON.stringify(this.state.region))
-
     this.map.animateToRegion({
-      latitude,longitude,latitudeDelta,longitudeDelta
-    }, d);
-    console.log(latitude+' '+longitude+' '+
-      latitudeDelta+' '+longitudeDelta)
+      latitude,longitude,latitudeDelta,longitudeDelta}, d);
   }
 
   onBatteryStateChanged = (state) => {
@@ -278,24 +304,24 @@ export default class Map extends Component {
   };
 
    start() {
-     requestPermission();
+    requestPermission();
     RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
-    .then(data => {
-      this.BackgroundGeolocationConfig();
-      BackgroundGeolocation.start();
-      console.log('hello');
-      BackgroundGeolocation.getCurrentLocation(location => {
-        console.log('hello too');
-        this.init(location);
-      });
-      DeviceBattery.getBatteryLevel().then(level => {
-        this.setState({batteryState: level}) // between 0 and 1
-      });
-      // to attach a listener
-      DeviceBattery.addListener(this.onBatteryStateChanged);
-      
-      let timer = setInterval(this.getCurrentLocation_func, this.state.timerForReadLocation);
-      this.setState({timer});
+      .then(data => {
+        this.BackgroundGeolocationConfig();
+        BackgroundGeolocation.start();
+        console.log('hello');
+        BackgroundGeolocation.getCurrentLocation(location => {
+          console.log('hello too');
+          this.init(location);
+        });
+        DeviceBattery.getBatteryLevel().then(level => {
+          this.setState({batteryState: level}) // between 0 and 1
+        });
+        // to attach a listener
+        DeviceBattery.addListener(this.onBatteryStateChanged);
+        
+        let timer = setInterval(this.getCurrentLocation_func, this.state.timerForReadLocation);
+        this.setState({timer});
       }).catch(err => {
     });
   }
@@ -401,18 +427,10 @@ export default class Map extends Component {
                 <MenuItem onPress={() => {
                   this._menu.hide()
                   }} textStyle={{fontSize: 16}} disabled>Map</MenuItem>
-                {/* <MenuItem onPress={() => {
-                  this._menu.hide()
-                  navigation.navigate('Setting')
-                  }} textStyle={{color: '#000', fontSize: 16}}>Setting</MenuItem> */}
                 <MenuItem  onPress={() =>{
                   this._menu.hide()
                   navigation.navigate('Profile')
                   }} textStyle={{color: '#000',fontSize: 16}}>Profile</MenuItem>
-                <MenuItem  onPress={() =>{
-                  this._menu.hide()
-                  navigation.navigate('FlatListComponent')
-                  }} textStyle={{color: '#000',fontSize: 16}}>flat list</MenuItem>
                 <MenuItem onPress={() =>{
                   this._menu.hide()
                   AsyncStorage.clear();
@@ -428,7 +446,7 @@ export default class Map extends Component {
                 justifyContent: 'center',
                 marginRight: 3,
               }}
-              onPress={() => navigation.navigate('AddPerson')}>
+              onPress={() => navigation.navigate('AddPerson',{name: 'map'})}>
               <Image source={require('../asset/addU.png')} 
               style={{alignSelf:'center', width: 24, height: 24}} resizeMode='contain'
               />

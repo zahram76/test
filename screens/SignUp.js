@@ -11,7 +11,6 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import SQLite from "react-native-sqlite-storage";
 import {styles} from '../style.js';
-import {initDatabase} from '../functions/initDatabase.js';
 import { DbHelper } from "../functions/isRepeatedUser";
 import { insertUser } from "../functions/insertUser.js";
 

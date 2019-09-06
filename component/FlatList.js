@@ -1,10 +1,13 @@
 import React, {Component} from 'react';  
 import {Image, StyleSheet, Text, View, Animated, FlatList, TouchableOpacity, Dimensions} from 'react-native';  
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import SQLite from "react-native-sqlite-storage";
 import {deleteUser} from '../functions/deleteUser.js';
 import {styles} from '../style.js';
 
-const color = '#028687';
+var RNFS = require('react-native-fs');
+const color = '#349e9f';
+
 
 SQLite.DEBUG(true);
 SQLite.enablePromise(false);
@@ -12,7 +15,7 @@ SQLite.enablePromise(false);
 var DB = SQLite.openDatabase(
     {name : "db", createFromLocation : "~db.sqlite"});
 
-export default class FlatListComponent extends Component {  
+export default class TrackerUser extends Component {  
   constructor(){
       super()
       this.state = {
@@ -22,9 +25,7 @@ export default class FlatListComponent extends Component {
       }
       this.init();
   }
-
-  componentDidMount(){
-    
+  componentDidMount(){ 
   }
 
   removePeople(str) {
@@ -51,7 +52,6 @@ export default class FlatListComponent extends Component {
       deleteUser(str);
       console.log(JSON.stringify(this.state.FlatListItems))
       this.removePeople(str);
-      //console.log(JSON.stringify(this.state.FlatListItems))
     }
   }
 
@@ -141,6 +141,34 @@ FlatListItemSeparator = () => {
   </View>   
     );
   }
+
+  static navigationOptions = ({ navigation }) => {
+    return {
+      title: 'Tracker User',
+      headerStyle: {
+        backgroundColor: color,
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+        headerRight: (
+          <View style={{flexDirection: "row"}}>
+            <TouchableOpacity 
+              style={{
+                alignSelf: 'center',
+                height: '100%', 
+                marginRight: 20,
+              }}
+              onPress={() => navigation.navigate('AddPerson',{name: 'setting'})}>
+              <Image source={require('../asset/addU.png')} 
+                style={{alignSelf:'center', width: 24, height: 24}} resizeMode='contain'
+              />
+            </TouchableOpacity>
+          </View>
+        ),
+      }
+    }
 }
 
 const style = StyleSheet.create({

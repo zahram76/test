@@ -14,48 +14,33 @@ import Profile from './screens/Profile.js';
 import Setting from './screens/Setting';
 import AddPerson from './screens/AddPerson.js';
 import AuthLoadingScreen from './screens/AuthLoading.js';
-import FlatListComponent from './component/FlatList.js'
+import TrackerUser from './component/FlatList.js'
 import imagePicker from './screens/imagePicker.js';
+import MapSetting from './screens/MapSetting.js';
+import AccountSetting from './screens/AccountSetting.js';
 
-const color = '#028687';
+const color = '#349e9f';
 
 const AppStack = createStackNavigator({
   Map: {
     screen: Map,
   },
-  //  Setting: {
-  //   screen: Setting,
-  //   navigationOptions: {
-  //     title: 'Setting',
-  //     headerStyle: {  
-  //       backgroundColor: '#023D5A',
-  //     },
-  //     headerTintColor: '#fff',
-  //     headerTitleStyle: {
-  //       fontWeight: 'bold',
-  //     },
-  //   },
-  // },
    Profile: {
     screen: Profile,  
-    navigationOptions: {
-      title: 'Profile',
-      headerStyle: {
-        backgroundColor: color,
-      },
-      headerTintColor: '#fff',
-      headerTitleStyle: {
-        fontWeight: 'bold',
-      },
-    },
    },
    AddPerson: {
     screen: AddPerson,
    },
-  FlatListComponent: {
-    screen: FlatListComponent,
+   AccountSetting: {
+    screen: AccountSetting,
+  },
+   TrackerUser: {
+    screen: TrackerUser,
+  },
+  MapSetting: {
+    screen: MapSetting,
     navigationOptions: {
-      title: 'flat list',
+      title: 'Map setting',
       headerStyle: {
         backgroundColor: color,
       },

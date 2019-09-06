@@ -11,13 +11,14 @@ import {
     Dimensions,
     StyleSheet,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import SQLite from "react-native-sqlite-storage";
 import {styles} from '../style.js';
 import BatteryLevel from '../component/BatteryLevel.js';
 import {Setting} from './Setting.js'
+//import { Icon } from "react-native-elements";
 
-const color = '#028687';
+const color = '#349e9f';
 
 var DB = SQLite.openDatabase(
   {name : "db", createFromLocation : "~db.sqlite"});
@@ -38,8 +39,27 @@ export default class Profile extends Component {
             avatarSource: require('../asset/defaultProfile.png'),
         };
         this.init();
-       
     }
+
+    static navigationOptions = ({ navigation }) => {
+      return {
+          title: 'Profile',
+          headerStyle: {
+            backgroundColor: color,
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+          headerLeft: (
+          <View style={{marginLeft: 15}}>
+            <MaterialCommunityIcons name={'arrow-left'} size={25} style={{color: 'white'}}
+              onPress={ () => { navigation.navigate('Map',{name: 'profile'}) }} />
+          </View>
+          ),
+        }
+      }
+    
 
     init(){
       console.log(' init profile');
@@ -50,7 +70,6 @@ export default class Profile extends Component {
           tx.executeSql('select phone_no, user_id, username, password, user_image from CurrentTrackingUser ', [], (tx, results) => {
                 console.log('Results', results.rows.length);
                 if (results.rows.length > 0) {
-                  
                   for(let i=0; i<results.rows.length; ++i){
                     console.log('Resultsss', JSON.stringify(results.rows.item(i)));
                       JSON.parse(results.rows.item(i).user_image, (key,value) => {
@@ -76,19 +95,31 @@ export default class Profile extends Component {
           })
       });
   }
-
-  AddButtonPress(){
-    
-  }
   
+  componentDidMount(){
+    this.props.navigation.setParams({ name: 'profile' })
+    const { navigation } = this.props;
+    //Adding an event listner om focus
+    //So whenever the screen will have focus it will set the state to zero
+    this.focusListener = navigation.addListener('didFocus', () => {
+      if(this.props.navigation.state.params != null){
+        console.log(' navigation param : ' + JSON.stringify(this.props.navigation.state.params));
+        const str = JSON.stringify(this.props.navigation.state.params);
+        JSON.parse(str, (key,value) => {
+          if(key == 'name' && value == 'account'){ this.init();}
+          //else if(key == 'name' && value == 'adduser'){}
+          console.log(value);
+          
+        })  
+      } else { console.log( ' is nul ')}
+    });
+  }
     render() {
         return ( 
          <View style={styles.scrolStyle}>
             <ScrollView style={styles.scrolStyle} scrollEnabled contentContainerStyle={styles.scrollview}>
-              <ImageBackground source={require('../images/background.png')} style={styles.backcontainer}> 
-
               <View style={{flex: 1, flexDirection: 'column', width: '100%'}}>
-                <View  style={[style.avatarContainer,{flex: 1, flexDirection: 'row', width: '100%', marginBottom: 30}]}>
+                <View  style={[style.avatarContainer,{flex: 1, flexDirection: 'row', width: '100%'}]}>
                   <View style={{flex: 2, flexDirection: 'column', width: '100%'}}>
                     <Text style={[style.profileText, {marginTop: 70,marginBottom: 5}]}> {this.state.username} </Text>
                     <Text style={style.profileText}> {this.state.phone_no} </Text>
@@ -96,30 +127,19 @@ export default class Profile extends Component {
                   <View style={{flex: 1, flexDirection: 'column', width: '100%'}}>
                     <Image source={this.state.avatarSource}
                         style={style.avatarImage} resizeMode={'cover'}/>
-                  </View>                  
+                  </View>             
                 </View>
-  
-             {/*} <Setting  />*/}
-              <View style={{flex: 1}}>
-                  <TouchableOpacity style={[styles.btn,{alignSelf:'center', width: 100, height: 40, 
-                     marginTop: 10, marginRight: 20, backgroundColor: color}]}
-                    onPress={this.AddButtonPress.bind(this)}>
-                    <Text style={{color: '#ffffff'}}>save</Text>
-                  </TouchableOpacity> 
-                </View>
-            </View>
-          </ImageBackground>
+              
+                <Setting  navigation = {this.props.navigation}/>
+              </View>
         </ScrollView>
      </View>
         );
     }
 }
 
-//get={false} cb = {(val) => alert('s')}
-
 const style = StyleSheet.create({
   MainContainer :{
-  // Setting up View inside content in Vertically center.
     justifyContent: 'center',
     flex:1,
     margin: 10,
