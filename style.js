@@ -218,7 +218,7 @@ export const styles = StyleSheet.create({
       backgroundColor: '#fff',
       left: '5%',
       top: '2%',
-      borderRadius: 50,
+      borderRadius: 5,
       shadowColor: '#000000',
       elevation: 7,
       shadowRadius: 5,

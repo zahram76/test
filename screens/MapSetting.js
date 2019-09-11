@@ -1,6 +1,7 @@
 import React ,{ Component } from 'react';  
 import {Image, StyleSheet, Text, View, Animated, FlatList, TouchableOpacity, Dimensions} from 'react-native';  
 import SQLite from "react-native-sqlite-storage";
+import { CheckBox } from 'react-native-elements';
 import {styles} from '../style.js';
 
 const color = '#349e9f';
@@ -21,19 +22,22 @@ constructor(){
         FlatListItems: [{
             key: 'MapType_1',
             name: 'standard',
-            value: true, 
+            checked: false, 
             image: require('../images/defaultMap.png')
         },{
             key: 'MapType_2',
             name: 'satellite',
-            value: false,
+            checked: false,
             image: require('../images/sateliteMap.png'),
         },{
             key: 'MapType_3',
             name: 'terrain',
-            value: false,
+            checked: false,
             image: require('../images/terrianMap.png'),
-        }]
+        }],
+        border1: null,
+        border2: null,
+        border3: null,
     }
     this.init();
 }
@@ -45,7 +49,12 @@ init(){
         tx.executeSql('select value from Settings where setting_name=?', ['mapType'], (tx, results) => {
               console.log('Results', results.rows.length);
               if (results.rows.length > 0) {
-                this.state.maptype = results.rows.item(0)
+                this.state.maptype = results.rows.item(0).value
+                for(let i=0; i<this.state.FlatListItems.length; ++i){
+                  if(this.state.FlatListItems[i].name == this.state.maptype){
+                    this.state.FlatListItems[i].checked = true
+                  }
+                }
                 console.log('map type : ' + this.state.maptype)
               } else { console.log('can not find map type setting ') }  
         });
@@ -77,7 +86,6 @@ changeType(name){
 }
 
 componentWillUnmount(){
-    
    // this.props.navigation.setParams({ name: 'Lucy' })
 }
 
@@ -88,8 +96,9 @@ return (
       data={ this.state.FlatListItems }   
       ItemSeparatorComponent = {this.FlatListItemSeparator}
       renderItem={({item}) => 
-      <TouchableOpacity>
-      <View key={item.key} style={style.itemContainer}>
+      <TouchableOpacity onPress={()=> {this.changeType(item.name); this.select(item.name)}}>
+      <View key={item.key} 
+        style={style.itemContainer}>
           <View style={{flex: 1}}>
               <Image source={item.image} style={style.userImage}/>
           </View>
@@ -97,9 +106,8 @@ return (
             <Text style={{ marginHorizontal: 20, fontSize: 17}}>{item.name}</Text>
           </View>
           <View style={{flex: 1, alignSelf: 'center'}}>
-              <TouchableOpacity onPress={() => this.changeType(item.name)}>
-                  <Image  source={require('../asset/removeIcon.png')} style={style.iconImage}/>
-              </TouchableOpacity>
+            <Image source={item.name == 'standard'? this.state.border1 : item.name=='satellite'?
+            this.state.border2 : item.name=='terrain' ? this.state.border3 : null} />
           </View>
       </View>
       </TouchableOpacity>
@@ -108,6 +116,22 @@ return (
   </View>   
     );
 }
+
+  select(name){
+    if(name == 'standard'){
+      this.setState({border1: {uri: 'asset:/images/checkbox.png'}})
+      this.setState({border2: null})
+      this.setState({border3: null})
+    } else if(name == 'satellite'){
+      this.setState({border1: null})
+      this.setState({border2: {uri: 'asset:/images/checkbox.png'}})
+      this.setState({border3: null})
+    } else if(name == 'terrain'){
+      this.setState({border1: null })
+      this.setState({border2: null })
+      this.setState({border3: {uri: 'asset:/images/checkbox.png'}})
+    }
+  }
 }
 
 const style = StyleSheet.create({
@@ -132,7 +156,7 @@ itemContainer: {
 },
 userImage: {
   height: 55, width: 55, 
-    borderRadius: 10, borderColor: color, borderWidth: 2, alignSelf: 'center'
+    borderRadius: 10, borderColor: '#ffffff', borderWidth: 2, alignSelf: 'center'
 },
 iconImage:{height: 30, width: 30, alignSelf: 'center', alignContent: 'center'}
 });

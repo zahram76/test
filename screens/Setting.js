@@ -2,13 +2,9 @@ import React from "react";
 import {
   View, 
   Image,
-  Alert,
-TouchableOpacity} from "react-native";
+  Alert} from "react-native";
 import {styles} from '../style.js'
 import SettingsList from 'react-native-settings-list';
-import Menu, { MenuItem } from 'react-native-material-menu';
-import Icon from "react-native-vector-icons/Ionicons";
-import AsyncStorage from '@react-native-community/async-storage';
 
 export const Setting = function(props){ //({ get, props })=>{
     const navigation = props.navigation;
@@ -43,7 +39,7 @@ export const Setting = function(props){ //({ get, props })=>{
           <SettingsList.Item
             icon={<Image style={styles.imageStyle} source={require('../asset/marker-setting.png')}/>}
             title='Marker'
-            onPress={() => Alert.alert('Route To distance filter Page')}
+            onPress={() => navigation.navigate('MarkerSetting')}
           />
           <SettingsList.Item
             icon={<Image style={styles.imageStyle} source={require('../asset/users-group.png')}/>}
@@ -53,6 +49,13 @@ export const Setting = function(props){ //({ get, props })=>{
             onPress={() => navigation.navigate('TrackerUser')}
           />
           <SettingsList.Header headerStyle={{marginTop:4}}/>
+          <SettingsList.Item
+            icon={<Image style={styles.imageStyle} source={require('../asset/treasure-map.png')}/>}
+            title='History'
+            titleInfo=' '
+            titleInfoStyle={styles.titleInfoStyle}
+            onPress={() => navigation.navigate('History')}
+          />
           <SettingsList.Item
             icon={<Image style={styles.imageStyle} source={require('../asset/notification.png')}/>}
             title='Notifications'

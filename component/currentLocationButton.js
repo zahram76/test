@@ -11,9 +11,9 @@ export const CurrentLocationButton = function(props){
     return(
         <View style={[styles.container, {top: '90%'}]}>
             <TouchableOpacity onPress ={() => { cb() }}>
-            <Image 
-                source={require('../asset/myLocation.png')}
-                style={{width:28, height:28}}/>
+                <MaterialIcons name={"my-location"}
+                      style={{alignSelf:'center'}} size={24} color={'#000000'}
+                />
             </TouchableOpacity>
         </View>
     )

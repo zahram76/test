@@ -3,7 +3,6 @@ import {
     View, 
     Text, 
     TouchableOpacity, 
-    ImageBackground,
     TextInput,
     Image,
     ScrollView,
@@ -57,26 +56,24 @@ export default class AddPerson extends Component {
             bordercolor3: '#DBDBDB',
             FlatListItems: [],
             resizedImageUri: null,
-            avatarSource: require('../asset/defaultProfile.png'),
+            avatarSource: {uri: 'asset:/images/defaultProfile.png'},
             isReady: false,
             uriFlag: false,
             sendigType: 'interval',
             showInputInterval : true,
+            interval : 20,
         };
-        imageUri = '';
-        savedImageUri ='';
-        flagIsRepeat = true;
-        interval = 20;
-        
-        
+        this.imageUri = '';
+        this.savedImageUri ='';
+        this.flagIsRepeat = true;
+       
     }
 
-    saveImageToDevice(name,data){
-        var image;
-        if(this.state.uriFlag == false) {image = {require : this.state.avatarSource}; }
-        else { image = data; this.setState({uriFlag: false})}
-        insertUser(this.state.phone_no, this.state.first_name, this.state.last_name, image, thi.state.sendingType, this.interval);
-        this.setState({message: 'Success'+'\n'+'You are Registered Successfully'}); 
+    saveImageToDevice(){
+        console.log(' in save image to device :' + JSON.stringify(this.state.avatarSource))
+        console.log('timer interval in add prson: ' , this.state.interval)
+        insertUser(this.state.phone_no, this.state.first_name, this.state.last_name, this.state.avatarSource, this.state.sendigType, this.state.interval, false);
+        this.setState({message: 'Success'+'\n'+'User is Registered Successfully'}); 
         this.setState({error: false});
         this.setState({isReady: true});
     }
@@ -96,7 +93,6 @@ export default class AddPerson extends Component {
           ImageResizer.createResizedImage(uri, 300, 300, 'JPEG', 80,1, RNFS.DocumentDirectoryPath+'/images/')
           .then(({uri}) => {
             this.setState({avatarSource: {uri: uri}})
-            this.setState({uriFlag: true})
           }).catch((err) => {
             console.log(err);
           });
@@ -142,7 +138,8 @@ export default class AddPerson extends Component {
   }
 
   insert(){
-    this.saveImageToDevice(this.state.phone_no.split(' ')[0], this.state.avatarSource)
+    console.log(' in insert :')
+    this.saveImageToDevice()
   }
     render() {
         return ( 
@@ -244,8 +241,8 @@ export default class AddPerson extends Component {
                       placeholderTextColor={'#8D8D8D'}
                       underlineColorAndroid='transparent'
                       keyboardType={'numeric'}
-                      onChangeText={txt => {
-                        this.setState({interval: parseInt(txt.split(' ')[0])})}}/>
+                      onChangeText={txt => { console.log('in add person for adding interval : ', txt);
+                        this.setState({interval: parseInt(txt)})}}/>
                 </View> : null}
               </View>             
 
@@ -266,7 +263,7 @@ export default class AddPerson extends Component {
                     onPress={this.AddButtonPress.bind(this)}>
                     <Text style={{color: '#ffffff'}}>save</Text>
                   </TouchableOpacity> 
-                </View>
+              </View>
             </View>
         </ScrollView>
      </View>

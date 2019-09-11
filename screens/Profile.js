@@ -2,21 +2,14 @@ import React, {Component} from "react";
 import {
     View, 
     Text, 
-    TouchableOpacity, 
-    ImageBackground,
-    TextInput,
     Image,
     ScrollView,
-    FlatList,
-    Dimensions,
     StyleSheet,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import SQLite from "react-native-sqlite-storage";
 import {styles} from '../style.js';
-import BatteryLevel from '../component/BatteryLevel.js';
 import {Setting} from './Setting.js'
-//import { Icon } from "react-native-elements";
 
 const color = '#349e9f';
 

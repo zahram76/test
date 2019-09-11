@@ -18,6 +18,9 @@ import TrackerUser from './component/FlatList.js'
 import imagePicker from './screens/imagePicker.js';
 import MapSetting from './screens/MapSetting.js';
 import AccountSetting from './screens/AccountSetting.js';
+import History from './screens/history.js';
+import HistoryShowOnMap from './screens/historyShowOnMap.js';
+import MarkerSetting from './screens/MarkerSetting.js'
 
 const color = '#349e9f';
 
@@ -36,6 +39,25 @@ const AppStack = createStackNavigator({
   },
    TrackerUser: {
     screen: TrackerUser,
+  },
+  History: {
+    screen: History,
+  },
+  HistoryShowOnMap:{
+    screen: HistoryShowOnMap,
+  },  
+  MarkerSetting:  {
+    screen: MarkerSetting,
+    navigationOptions: {
+      title: 'Marker Setting',
+      headerStyle: {
+        backgroundColor: color,
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    },
   },
   MapSetting: {
     screen: MapSetting,

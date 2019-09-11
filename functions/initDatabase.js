@@ -14,7 +14,7 @@ export function initDatabase(){
           console.log("\n Users ");
           console.log(JSON.stringify(results) + ' ' + len);
       });
-        tx.executeSql('CREATE TABLE IF NOT EXISTS Locations(loc_id integer primary key autoincrement,locType text not null, datatime text not null, latitude text not null, longitude text not null)', [], (tx, results) => {
+        tx.executeSql('CREATE TABLE IF NOT EXISTS Locations(loc_id integer primary key autoincrement, datatime text not null, latitude text not null, longitude text not null)', [], (tx, results) => {
           var len = results.rows.length;
           console.log("\n Locations ");
           console.log(JSON.stringify(results) + ' ' + len);
@@ -30,12 +30,19 @@ export function initDatabase(){
           console.log("\n Settings "+ settingFirstInsert);
           console.log(JSON.stringify(results) + ' ' + len);
         });
-          console.log("\n insert into settings aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ");
+          console.log("\n insert into settings mappppppppppp ");
           tx.executeSql('insert into Settings(setting_name, value) values(?,?)', ['mapType','standard'], (tx, results) => {
             var len = results.rowsAffected;
             console.log("\n insert maptype ");
             console.log(JSON.stringify(results) + ' ' + len);
           });
+          console.log("\n insert into settings markerrrrrrrrr ");
+          tx.executeSql('insert into Settings(setting_name, value) values(?,?)', ['markerImage', 'asset:/images//marker1.png'], (tx, results) => {
+            var len = results.rowsAffected;
+            console.log("\n insert markerImage ");
+            console.log(JSON.stringify(results) + ' ' + len);
+          });
       });
+
 
 }

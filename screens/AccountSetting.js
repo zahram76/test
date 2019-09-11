@@ -136,12 +136,20 @@ updateAccount(phone_no,username,password,image){
               } else { console.log('can not find map type setting ') }  
         });
         tx.executeSql('update CurrentTrackingUser set user_image=? where phone_no=?',
-        [JSON.stringify( image),phone_no], 
+        [JSON.stringify(image),phone_no], 
            (tx, results) => {
             console.log('Results', results.rowsAffected);
             if (results.rowsAffected > 0) {
               console.log('image update : ' + results.rowsAffected)
             } else { console.log('can not find image setting ') }  
+        });
+        console.log('update user image for marker setting in account : ',image.uri)
+        tx.executeSql('update Settings set value=? where setting_name=?', [image.uri,'markerImage'], 
+            (tx, results) => {
+              console.log('Results', results.rowsAffected);
+              if (results.rowsAffected > 0) {
+                console.log('markerImage update : ' + results.rowsAffected)
+              } else { console.log('can not find markerImage setting ') }  
         });
     });
 }
@@ -203,27 +211,13 @@ saveImageToDevice(name,data){
 }
 
 changePass(){
-  var no = JSON.stringify(RNSimData.getSimInfo().phoneNumber0)
-  console.log(no)
+  // var no = JSON.stringify(RNSimData.getSimInfo().phoneNumber0)
+  // console.log(no)
 }
 
 isRepeatedUser(){
-  // console.log('repeated user transaction');
-  //  DB.transaction((tx) => {
-  //   console.log('executing query');
-  //    tx.executeSql('select phone_no from Users where phone_no=?', 
-  //       [this.state.phone_no],(tx, results) => {
-  //         console.log('rows result '+results.rows.length);
-         // if(results.rows.length == 0){
-          this.flagIsRepeat = false;
-          this.insert(this.flagIsRepeat)
-            
-          // } else {
-          //   this.setState({message: 'This phone number is already in use. '})
-          //   this.setState({error: true});
-          //   this.setState({isReady: true});}
-    //       }});
-    // });
+  this.flagIsRepeat = false;
+  this.insert(this.flagIsRepeat)
 }
 
 insert(){
