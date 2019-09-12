@@ -89,7 +89,6 @@ export default class Map extends Component {
     requestPermission();
     RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
       .then(data => {
-        
       }).catch(err => {
     });
     this.BackgroundGeolocationConfig();
@@ -97,7 +96,6 @@ export default class Map extends Component {
         BackgroundGeolocation.getCurrentLocation(location => {this.init(location)
         //  console.log(JSON.stringify(location))
         });
-        
         DeviceBattery.getBatteryLevel().then(level => {
           this.setState({batteryState: level}) // between 0 and 1
         });

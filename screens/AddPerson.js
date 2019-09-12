@@ -128,7 +128,7 @@ export default class AddPerson extends Component {
               if(results.rows.length == 0){
 
                  this.flagIsRepeat = false;
-                 this.insert(this.flagIsRepeat)
+                 this.insert()
               } else {
                 this.setState({message: 'This phone number is already in use. '})
                 this.setState({error: true});
@@ -228,7 +228,8 @@ export default class AddPerson extends Component {
                     <Picker.Item label="speed" value="speed"/>
                   </Picker>
                 </View>
-                {this.state.showInputInterval? <View style={{flex: 1}}>
+                {this.state.showInputInterval? 
+                <View style={{flex: 1}}>
                   <TextInput 
                       style={[styles.addinput,{borderBottomColor : this.state.bordercolor3}]}
                       onFocus={() =>{this.setState({bordercolor3 : color});
