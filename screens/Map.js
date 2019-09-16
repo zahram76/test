@@ -29,6 +29,8 @@ let { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
 const LATITUDE_DELTA = 0.01;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+var lat = LATITUDE
+var long = LONGITUDE
 
 export default class Map extends Component {
   constructor(){
@@ -70,6 +72,7 @@ export default class Map extends Component {
        accuracy: 0,
        borderWidth: 0
     };
+    this.time = ''
     this.count = 0;
     this.correct = 0;
     this.counter = 0;
@@ -83,6 +86,7 @@ export default class Map extends Component {
     this.speedInterval = 0
     console.log(this.correct + this.count)
     this.geohash = '';
+    
   }
 //-------------------------------------------------------------------------------------------
   start() {
@@ -123,6 +127,10 @@ export default class Map extends Component {
       longitude: location.longitude,
     }
     this.setState({coordinates: coordinate})
+    lat = coordinate.latitude
+    long = coordinate.longitude
+  //this.state.LocationArray.concat([coordinate])
+   // this.setState({coordinates1: coordinate})
     console.log('init func coordinates : ',JSON.stringify(this.state.coordinates));
     a.push({
     latitude: location.latitude,
@@ -141,11 +149,15 @@ export default class Map extends Component {
     id : 0
     });
     this.setState({Markers: a})
+    //this.setState({Markersa: a})
+    console.log('Markersa111 ', JSON.stringify(this.state.Markersa))
     this.showRealData(coordinate)
+    //this.showRealData1(coordinate)
     this.setState({speed: location.speed})
+    this.initTimerToSend();
     console.log('initialized speed', JSON.stringify(location))
     this.sendBySpeed(this.state.speed);
-    this.initTimerToSend();
+    //this.initTimerToSend();
   }
 //-------------------------------------------------------------------------------------------
   centerMap(d){
@@ -198,12 +210,15 @@ export default class Map extends Component {
   }
 //-------------------------------------------------------------------------------------------
   componentDidMount(){
+    this.smsId = 0;
     this.initSetting(); 
     this.createDir();
     this.start();
+   
     SmsListener.addListener(message => parseMessage(message));
     const { navigation } = this.props;
     this.focusListener = navigation.addListener('didFocus', () => {
+      this.initTimerToSend();
       if(this.props.navigation.state.params != null){
         //console.log(' navigation param : ' + JSON.stringify(this.props.navigation.state.params));
         const str = JSON.stringify(this.props.navigation.state.params);
@@ -211,13 +226,14 @@ export default class Map extends Component {
           if(key == 'name' && value == 'profile'){
             //console.log(value);
             this.initSetting();
-            this.initTimerToSend();
+            
           }
         })
       } else {// console.log( ' is nul ')
     }
     });
-  }
+   }
+ 
 //-------------------------------------------------------------------------------------------
   render(){
     return (
@@ -226,29 +242,32 @@ export default class Map extends Component {
               ref={ref => {this.map = ref}}
               style={{flex:1, height: '100%', width: '100%'}}
               mapType={this.state.mapType}
-              showsUserLocation={true}
-              showsMyLocationButton={false}
+             // showsUserLocation={true}
+              //showsMyLocationButton={false}
               rotateEnabled={true}
               initialRegion={this.state.region}>
+
               {this.state.Markers.map(poly => {
                 return (
                   <Polyline
                     key={`poly_${poly.id}`}
                     coordinates={poly.routeCoordinates}
-                    strokeWidth={5} strokeColor= {poly.color}>
+                    strokeWidth={5} strokeColor= {'red'}> 
                   </Polyline> );
                })}
+
+
               {this.state.Markers.map(marker => {
                 return (
                   <Marker
-                      key={`marker1_${marker.id}`}
+                      key={`marker_${marker.id}`}
                       tracksViewChanges={true}
                       coordinate={{
                       latitude: marker.latitude,
                       longitude: marker.longitude}}
                       onPress={()=> alert('afajkl')}
                       >
-                        <Image source={this.state.markerImage == null ? {uri:'asset:/images/marker1.png'}
+                         <Image source={this.state.markerImage == '' ? {uri: ' asset:/images/marker2.png'}
                           :this.state.markerImage} 
                           style={{width: 55, height: 55, borderRadius: 80, 
                             borderColor: 'white', borderWidth: this.state.borderWidth,
@@ -257,6 +276,7 @@ export default class Map extends Component {
                             }} resizeMode={'cover'}/>
                     </Marker> );
                 })}
+              
             </MapView>
               <View style={[styles.felan,{height: 100}]}>
                 <Text > Real Speed : {this.state.speed} </Text>
@@ -291,12 +311,13 @@ changeMapType(mapType){
 }
 //-------------------------------------------------------------------------------------------
   animateMarker (index){
+    
     const routeCoordinates = this.state.Markers[index].routeCoordinates;
     const distanceTravelled = this.state.Markers[index].distanceTravelled;
     const { latitude, longitude } = this.state.coordinates;
     const newCoordinate = { latitude, longitude };
       if (this.marker) {
-        this.marker._component.animateMarkerToCoordinate(newCoordinate, 1000);
+        this.marker._component.animateMarkerToCoordinate(newCoordinate,  1000);
       }
     let a = this.state.Markers; //creates the clone of the state
     a[index] = {latitude,
@@ -309,10 +330,33 @@ changeMapType(mapType){
                 title: a[index].title};
     this.setState({Markers: a});
   }
+  //-------------------------------------------------------------------------------------------
+  // animateMarker1 (index){
+  //   console.log(' in animate marker1 : ', JSON.stringify(this.state.Markersa[index]))
+  //   const routeCoordinates = this.state.Markersa[index].routeCoordinates;
+  //   const distanceTravelled = this.state.Markersa[index].distanceTravelled;
+  //   const { latitude, longitude } = this.state.coordinates1;
+  //   const newCoordinate = { latitude, longitude };
+  //     if (this.marker1) {
+  //       this.marker1._component.animateMarkerToCoordinate(newCoordinate, 1000);
+  //     }
+  //   let a = this.state.Markersa; //creates the clone of the state
+  //   a[index] = {latitude,
+  //               longitude,
+  //               routeCoordinates: routeCoordinates.concat([newCoordinate]),
+  //               distanceTravelled:
+  //                 distanceTravelled + this.calcDistance(newCoordinate, index),
+  //               prevLatLng: newCoordinate,
+  //               color: a[index].color,
+  //               title: a[index].title};
+  //   this.setState({Markersa: a});
+  // }
 //-------------------------------------------------------------------------------------------
   showRealData(coordinate){
     index = 0;
     this.setState({coordinates : coordinate});
+    lat = coordinate.latitude
+    long = coordinate.longitude
     this.setState({region: {
         latitude: coordinate.latitude,
         longitude: coordinate.longitude,
@@ -324,15 +368,33 @@ changeMapType(mapType){
       console.log('send speed ', this.state.speed)
   }
 //-------------------------------------------------------------------------------------------
+  showRealData1(){
+   // this.state.LocationArray.push(coordinate);
+    //console.log(' in show real data1',JSON.stringify(this.state.LocationArray))
+    //this.getAVGlocation();
+    // index = 0;
+    // this.setState({coordinates1 : coordinate});
+    // this.setState({region: {
+    //     latitude: coordinate.latitude,
+    //     longitude: coordinate.longitude,
+    //     latitudeDelta: this.state.region.latitudeDelta,
+    //     longitudeDelta: this.state.region.latitudeDelta,
+    //   }});
+    // this.animateMarker1(index);
+    //this.sendBySpeed(this.state.speed);
+     // console.log('send speed ', this.state.speed)
+  }
+//-------------------------------------------------------------------------------------------
   getCurrentLocation_func = () => {
     RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({interval: 10000, fastInterval: 5000})
     BackgroundGeolocation.getCurrentLocation(location => {
-      this.setState({speed: location.speed});
-      console.log('initialized speed', location.speed)
+      this.setState({speed: location.speed==null?0:location.speed});
+      console.log('initialized speed', location.speed==null?0:location.speed)
       this.setState({accuracy: location.accuracy});
       //console.log('accuracy : '+location.accuracy)
-
-    if(location.speed > 0.5 && location.accuracy < 27){
+     // this.state.LocationArray.concat([{latitude: location.latitude, longitude: location.longitude}]);
+      //this.showRealData1()
+    if(location.speed > 1 && location.accuracy < 27){
       this.showRealData({latitude: location.latitude, longitude: location.longitude})
       if(this.lastLat != location.latitude && this.lastLong != location.longitude)
         insertLocation(location.latitude, location.longitude, this.lastLat, this.lastLong)
@@ -433,6 +495,16 @@ changeMapType(mapType){
       clearInterval(this.timer[i]);
     }
   }
+  //-------------------------------------------------------------------------------------------
+  getTime(){
+    var today = new Date();
+      var date = today.getFullYear()+'-'+(today.getMonth()+1<10? '0'+(today.getMonth()+1) : today.getMonth()+1)+
+        '-'+(today.getDate()<10? '0'+today.getDate() : today.getDate());
+      var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      var dateTime = date+' '+time;
+      this.time = dateTime
+      console.log('in get time : ', time)
+  }
 //-------------------------------------------------------------------------------------------
 initTimerToSend(){
   console.log(' timer init')
@@ -441,18 +513,31 @@ initTimerToSend(){
         console.log(' timer Results', JSON.stringify(results.rows));
         if (results.rows.length > 0) {
           for(let i=0; i<results.rows.length; ++i){
+
+            for(let k=0; k<this.timer.length; ++k)
+                clearInterval(this.timer[k])
+              this.timer = []
+
+            this.clearAllIntervals()
+            this.speedSend = []
+
             console.log(' timer Results', results.rows.item(i).phone_no, results.rows.item(i).sending_setting, results.rows.item(i).interval*1000);
             if(results.rows.item(i).sending_setting == "interval"){
-              console.log('timer setting intervallllllllllllllllllllllllllllllllllllllllllll')
+              //console.log('timer setting intervallllllllllllllllllllllllllllllllllllllllllll')
               var lat = this.state.coordinates.latitude
               var long = this.state.coordinates.longitude
-              let timer = setInterval(this.sendsms, 1000*results.rows.item(i).interval, results.rows.item(i).phone_no,lat, long);
-              this.timer = []
+              this.getTime()
+              let timer = setInterval(this.sendsms, 1000*results.rows.item(i).interval, results.rows.item(i).phone_no,lat, long, this.state.batteryState, this.time, this.state)
+              
+              //let timer = setInterval(this.sendsms(results.rows.item(i).phone_no,lat, long, this.state.batteryState, this.time),1000*results.rows.item(i).interval )
               this.timer.push(timer);
+              console.log('timer setting after push', this.timer)
+
             } else if(results.rows.item(i).sending_setting == "speed"){
-              console.log('timer setting speed')
-              this.speedSend = []
+              
               this.speedSend.push(results.rows.item(i).phone_no)
+              console.log('timer setting speed', this.speedSend)
+              this.sendBySpeed(this.state.speed)
             }
           }
           console.log('timer inti setting ')
@@ -462,6 +547,7 @@ initTimerToSend(){
 }
 //-------------------------------------------------------------------------------------------
 sendBySpeed(speed){ //send between [1-20]s
+  this.getTime()
   console.log('interval : ',this.speedInterval,'phone_no : ', JSON.stringify(this.speedSend), 
     'coordinates : ', JSON.stringify(this.state.coordinates))
   var lat = this.state.coordinates.latitude;
@@ -473,49 +559,60 @@ sendBySpeed(speed){ //send between [1-20]s
       this.clearAllIntervals();
       this.speedInterval = 600
       for(let i=0; i<this.speedSend.length; ++i){
-        let timer = setInterval(this.sendsms, 1000*this.speedInterval, this.speedSend[i],lat, long);//45
-          this.timer.push(timer);
+        this.getTime()
+        let timer = setInterval(this.sendsms, 1000*this.speedInterval, this.speedSend[i],lat, long, this.state.batteryState, this.time, this.state);//45
+        this.smsId = this.smsId+1
+        this.timer.push(timer);
       }
     }
   }
   else if(speed < 2 ){ // walking
-    if( this.speedInterval != 13){
+    if( this.speedInterval != 25){
       this.clearAllIntervals();
-      this.speedInterval = 13
+      this.speedInterval = 25
       for(let i=0; i<this.speedSend.length; ++i){
-        let timer = setInterval(this.sendsms, 1000*this.speedInterval,  this.speedSend[i],lat, long);//13
-          this.timer.push(timer);
+        this.getTime()
+        let timer = setInterval(this.sendsms, 1000*this.speedInterval,  this.speedSend[i],lat, long, this.state.batteryState, this.time, this.state);//13
+        this.smsId = this.smsId+1 
+        this.timer.push(timer);
       }
     }
   } else if(speed < 5){ // running
-    if( this.speedInterval != 8){
+    if( this.speedInterval != 15){
       this.clearAllIntervals();
-      this.speedInterval = 8
+      this.speedInterval = 15
       for(let i=0; i<this.speedSend.length; ++i){
-        let timer = setInterval(this.sendsms, 1000*this.speedInterval,  this.speedSend[i],lat, long);//8
-          this.timer.push(timer);
+        this.getTime()
+        let timer = setInterval(this.sendsms, 1000*this.speedInterval,  this.speedSend[i],lat, long, this.state.batteryState, this.time, this.state);//8
+        this.smsId = this.smsId+1
+        this.timer.push(timer);
       }
     }
   } else if(speed < 10){ // trafic
-    if( this.speedInterval != 4){
+    if( this.speedInterval != 7){
       this.clearAllIntervals();
-      this.speedInterval = 4
+      this.speedInterval = 7
       for(let i=0; i<this.speedSend.length; ++i){
-        let timer = setInterval(this.sendsms, 1000*this.speedInterval,  this.speedSend[i],lat, long);//4
-          this.timer.push(timer);
+        this.getTime()
+        let timer = setInterval(this.sendsms, 1000*this.speedInterval, this.speedSend[i],lat, long, this.state.batteryState, this.time , this.state);//4
+        this.smsId = this.smsId+1
+        this.timer.push(timer);
       }
     }
   } else if(speed < 30){ // car
-    if( this.speedInterval != 2){
+    if( this.speedInterval != 3){
       this.clearAllIntervals();
-      this.speedInterval = 2
+      this.speedInterval = 3
       for(let i=0; i<this.speedSend.length; ++i){
-        let timer = setInterval(this.sendsms, 1000*this.speedInterval,  this.speedSend[i],lat, long);//2
-          this.timer.push(timer);
+        this.getTime()
+        let timer = setInterval(this.sendsms, 1000*this.speedInterval ,this.speedSend[i],lat, long, this.state.batteryState, this.time, this.state);//2
+        this.smsId = this.smsId+1
+        this.timer.push(timer);
       }
     }
   } 
-  console.log('send by speed : ',this.speedInterval, JSON.stringify(this.speedSend))
+  //console.log('this.smsid : ', this.smsId)
+  //console.log('send by speed : ',this.speedInterval, JSON.stringify(this.speedSend))
 }
 //-------------------------------------------------------------------------------------------
 clearAllIntervals(){
@@ -524,15 +621,32 @@ clearAllIntervals(){
   }
 }
 //-------------------------------------------------------------------------------------------
-sendsms(phoneNumber, lat, long){ 
-  console.log('in send by sms : ', 'send it******************8' )
-   message = 'hello long:' + long + ' lat:' + lat  ;
-  //  SmsAndroid.autoSend(phoneNumber, message, (fail) => {
-  //      console.log("Failed with this error: " + fail)
-  //  }, (success) => {
-  //      console.log("SMS sent successfully" + success);
-  //  });
+sendsms(phoneNumber, lat, long, batteryState, time, state){ 
+  send(phoneNumber, lat, long, batteryState, time, state)
  }
+
+ 
+//-------------------------------------------------------------------------------------------
+// getAVGlocation(){
+//   var index = 0;
+//   var latitudeSum = 0;
+//   var longitudSum = 0;
+
+//   console.log('in get avg location ',JSON.stringify(this.state.LocationArray))
+//   for(i=0; i<this.state.LocationArray.length; ++i){
+//       latitudeSum += this.state.LocationArray[i].latitude;
+//       longitudSum += this.state.LocationArray[i].longitude;
+//   }
+//   var latitudeAvg = latitudeSum/this.state.LocationArray.length;
+//   var longitudeAvg = longitudSum/this.state.LocationArray.length;
+
+//   var coords = {latitude: latitudeAvg, longitude: longitudeAvg};
+//   //var a = this.state.coordinates1;
+//   //a[index] = coords;
+//   this.setState({coordinates1 : coords});
+//   console.log('\n index avg: '+ index, JSON.stringify(this.state.coordinates1))
+//   //this.animateMarker1();
+// }
 //-------------------------------------------------------------------------------------------
   BackgroundGeolocationConfig(){
     BackgroundGeolocation.configure({
@@ -610,3 +724,25 @@ sendsms(phoneNumber, lat, long){
       }
     }
 }
+function send(phoneNumber, lat1, long1, batteryState, time, state){
+  var today = new Date();
+  var date = today.getFullYear()+'-'+(today.getMonth()+1<10? '0'+(today.getMonth()+1) : today.getMonth()+1)+
+    '-'+(today.getDate()<10? '0'+today.getDate() : today.getDate());
+  var time = today.getHours() + ":" + today.getMinutes()  + ":" + today.getSeconds();
+  var dateTime = date+' '+time; 
+  //this.time = dateTime
+
+  console.log('in send sms testttt', lat, long)
+
+var battery = Math.round(batteryState * 100) / 100
+console.log('in send by sms : ', 'send it******************8', batteryState )
+var message = 'hello location long:' + long + ' lat:' + lat +' battery:' + battery + ' time:'+ dateTime ;
+SmsAndroid.autoSend(phoneNumber, message, (fail) => {
+   console.log("Failed with this error: " + fail)
+}, (success) => { 
+ 
+   console.log("SMS sent successfully" + success);
+});
+// this.smsId = this.smsId + 1;
+console.log('local variable message : ', message)
+ }

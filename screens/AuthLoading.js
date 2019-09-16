@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 export default class AuthLoadingScreen extends React.Component {
   constructor(props) {
     super(props);
-
+    console.disableYellowBox = true
     this._bootstrapAsync();
   }
 

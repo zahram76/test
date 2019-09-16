@@ -34,7 +34,8 @@ export default class TrackerUser extends Component {
         bordercolor: '#DBDBDB',
         settingVisable : false
       }
-      this.text = ''
+      this.text = '';
+      this.onFocusflag = true;
       this.init();
   }
 
@@ -104,7 +105,7 @@ export default class TrackerUser extends Component {
                         selected: false,
                         selectedClass: style.container,
                         sendigType: results.rows.item(i).sending_setting,
-                        interval: results.rows.item(i).interval,
+                        interval: results.rows.item(i).interval==null?20:results.rows.item(i).interval,
                         showInputInterval: results.rows.item(i).sending_setting=='interval'?true: false
                     });
                 }
@@ -161,7 +162,7 @@ changeSeendType = (item, sendigType) => {
 }
 
 changeInterval = (item, txt, ready) =>{
-  item.interval = txt;
+  item.interval = txt == ''? 20 : txt;
   console.log('flat list ', item.interval)
   const index = this.state.FlatListItems.findIndex(
     data => data.key === item.key
@@ -239,11 +240,14 @@ renderItem = (item) =>
             <View style={{flex: 1}}>
               <TextInput 
                   style={[styles.addinput,{borderBottomColor : this.state.bordercolor}]}
-                  onFocus={() =>{this.setState({bordercolor : color});}}
+                  onFocus={() =>{this.setState({bordercolor : color}); 
+                  this.onFocusflag = true; 
+                  this.setState({iscomplet: false}) }}
                   onBlur={() => {this.setState({bordercolor : "#DBDBDB"});
                    this.changeInterval(item, parseInt(this.text), true);
                    console.log('call change interval ', true)}}
                   placeholder={'20'}
+                  defaultValue={String(item.interval) }
                   placeholderTextColor={'#8D8D8D'}
                   underlineColorAndroid='transparent'
                   keyboardType={'numeric'}

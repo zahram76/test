@@ -14,6 +14,7 @@ export function insertLocation(latitude, longitude, lastlat, lastlong){
         '-'+(today.getDate()<10? '0'+today.getDate() : today.getDate());
       var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
       var dateTime = date+' '+time;
+      console.log('time in insert locaiton ', dateTime);
 
       DB.transaction((tx) => {
         tx.executeSql('insert into Locations(datatime, latitude, longitude) values (?,?,?)', 

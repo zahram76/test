@@ -25,17 +25,17 @@ export function parseMessage(message){
         });
     });
   }
-  else if (res[0] == 'hello' && res[1] == 'set' && res[2] == 'interval'){
-      var type = res[4] 
+  else if (res[0] == 'hello' && res[1] == 'update' && res[2].split(':')[0] == 'sendingType'){
+      var type = res[2].split(':')[1]
       var interval = 20
       if (type == 'interval')
-        interval = parseInt(res[5])
+        interval = parseInt(res[3].split(':')[1])
       console.log(' map for init setting');
       DB.transaction((tx) => {
         console.log("execute transaction");
         tx.executeSql('update Users set sending_setting=?, interval=? where phone_no=?', [type,interval,message.originatingAddress], (tx, results) => {
-            if(results.rows.length == 1){
-                m = 'hello interval is ok';
+            if(results.rowsAffected == 1){
+                m = 'hello get interval';
             } else m = 'no'
 
             SmsAndroid.autoSend(message.originatingAddress, m, (fail) => {

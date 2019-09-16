@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import {View, Text, TouchableOpacity, Image, StyleSheet, FlatList} from "react-native";
 import SQLite from "react-native-sqlite-storage";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import {deleteLacationByTime} from '../functions/deleteLocationd';
 
 const color = '#349e9f';
 var DB = SQLite.openDatabase({name : "db", createFromLocation : "~db.sqlite"});
@@ -55,6 +56,18 @@ locationDataInit(){
    // this.locationDataInit();
   }
 //-------------------------------------------------------------------------------------------
+  deletHistoryByTime = (item) => {
+    deleteLacationByTime(item.date, this.user_id);
+    const index = this.state.FlatListItems.findIndex(
+        data => data.key === item.key
+     );
+    this.setState({FlatListItems: this.state.FlatListItems.slice(0,index).concat(this.state.FlatListItems.slice(index+1))})
+    // this.state.FlatListItems[index] = item;
+    // this.setState({
+    // FlatListItems: this.state.FlatListItems
+    // });
+} 
+//-------------------------------------------------------------------------------------------
   render(){
     return (
     <View style={style.MainContainer}>
@@ -69,6 +82,10 @@ locationDataInit(){
           </View>
           <View style={{flexDirection: 'column', flex: 5, marginTop: 13}}>
             <Text style={{ marginHorizontal: 20, fontSize: 18}}>{item.date}</Text>
+          </View>
+          <View style={{flex: 1, alignSelf: 'center'}}>
+            <MaterialCommunityIcons name={'delete'} style={style.iconImage} 
+                color={'gray'} size={25} onPress={() => this.deletHistoryByTime(item)}/>
           </View>
         </View>
       </TouchableOpacity>
